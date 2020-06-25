@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+  xmlns:xhtml="http://www.w3.org/1999/xhtml">
+  
+  <url>
+    <loc>http://example.org/posts/borgbackup-on-macos/</loc>
+    <lastmod>2020-06-24T18:10:16-04:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://example.org/tags/macos/</loc>
+    <lastmod>2020-06-24T18:10:16-04:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://example.org/</loc>
+    <lastmod>2020-06-24T18:10:16-04:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://example.org/posts/</loc>
+    <lastmod>2020-06-24T18:10:16-04:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://example.org/tags/</loc>
+    <lastmod>2020-06-24T18:10:16-04:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://example.org/posts/ensembling-convnets-using-keras/</loc>
+    <lastmod>2017-12-13T00:00:00+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://example.org/tags/machine-learning/</loc>
+    <lastmod>2017-12-13T00:00:00+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://example.org/posts/cnn-captcha-attack/</loc>
+    <lastmod>2017-11-18T00:00:00+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://example.org/about/</loc>
+    <lastmod>1969-12-31T18:59:59-05:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://example.org/contact/</loc>
+    <lastmod>1969-12-31T18:59:59-05:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://example.org/categories/</loc>
+  </url>
+  
+</urlset>

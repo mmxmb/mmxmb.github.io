@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Breaking CAPTCHAs using a CNN | mmxmb</title>
+    <link rel="stylesheet" href="/css/style.css" />
+    <link rel="stylesheet" href="/css/fonts.css" />
+  </head>
+
+  <body>
+    <div class="container">
+    <nav>
+    <ul class="menu">
+      <li> <a href="/">Maxim Mikhaylov</a></li>
+      
+      <li><a href="/tags/">Tags</a></li>
+      
+      <li><a href="/contact/">Contact</a></li>
+      
+      <li><a href="/about/">About</a></li>
+      
+    </ul>
+    </nav>
+    </div>
+    <hr/>
+    <div class="container">
+
+
+<div class="article-meta">
+  <h1><span class="title">Breaking CAPTCHAs using a CNN</span></h1>
+  
+    <h3 class="date">November 18, 2017</h3>
+</div>
+
+<main>
+  <h1 id="introduction">Introduction</h1>
+<p>On one of my favorite wargame websites has a series of challanges on breaking CAPTCHA. It starts with a straightforward challange:</p>
+<hr>
+<h4 id="please-enter-the-captcha-backwards">Please enter the CAPTCHA backwards</h4>
+<p><img src="/cnn-captcha-attack/examples/captcha1.png" alt="First CAPTCHA example"></p>
+<p>Time remaining: 10.00 seconds</p>
+<hr>
+<p>Since no distortions are introduced to the text and there are ~100 distinct shapes, there are plenty of ways to read the text off the image without resorting to machine learning.</p>
+<p>The next one is even easier - only 12 distinct shapes:</p>
+<hr>
+<h4 id="please-enter-the-captcha-using-the-key-provided">Please enter the CAPTCHA using the key provided</h4>
+<p><img src="/cnn-captcha-attack/examples/captcha2.png" alt="Second CAPTCHA example"></p>
+<p>Time remaining: 10.00 seconds</p>
+<p>Key: 😃 :D | 🙂 :) | 😋 :p | 🙁 :( | 😉 ;) | 😎 B) | 😡 :@ | 😮 :o | 😖 :s | 😐 :| | 😕 :/ | 💚 &lt;3</p>
+<hr>
+<p>Then there are a couple of other similar challanges, each one slightly harder than the previous. Until, finally, there is this challange:</p>
+<hr>
+<h4 id="please-enter-the-captcha-using-the-key-provided-1">Please enter the CAPTCHA using the key provided</h4>
+<p><img src="/cnn-captcha-attack/examples/captcha4_1.png" alt="Third CAPTCHA example"></p>
+<p>Time remaining: 10.00 seconds</p>
+<p>Key: 😃 :D | 🙂 :) | 😋 :p | 🙁 :( | 😉 ;) | 😎 B) | 😡 :@ | 😮 :o | 😖 :s | 😐 :| | 😕 :/ | 💚 &lt;3</p>
+<hr>
+<p>I couldn&rsquo;t think of any bruteforce solution to this. Different symbol colors, translations and rotations makes a number of distinct shapes that can appear on an image very large. Here, a distinct shape means a unique ordering of pixel values in the image including their orientation.</p>
+<p>At the same time, this seems to be a perfectly manageable task for a convolutional neural network (CNN or ConvNet). A CNN can learn a representation of an image that is invariant to small transformations, distortions and translations in the input image.</p>
+<blockquote>
+<p><strong>SPOILER ALERT:</strong> I really enjoyed solving this challenge and don&rsquo;t want to spoil it for others. If you want to try solving this challenge, <a href="https://defendtheweb.net">here</a> is the website that hosts it. It&rsquo;s in CAPTCHA category there.</p>
+</blockquote>
+<blockquote>
+<p>If you are not very interested in attempting the challange, but want to see a simple application of a CNN that is different from MNIST or CIFAR-10 classification (I have read way too many tutorials on these), then continue reading!</p>
+</blockquote>
+<h1 id="imports">Imports</h1>
+<blockquote>
+<p>This post was written in 2017. Keras changed quite a lot since then. Just a FYI.</p>
+</blockquote>
+<div class="highlight"><pre style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python"><span style="color:#00f">import</span> numpy <span style="color:#00f">as</span> np
+<span style="color:#00f">import</span> glob
+<span style="color:#00f">from</span> scipy <span style="color:#00f">import</span> misc
+<span style="color:#00f">import</span> matplotlib.pyplot <span style="color:#00f">as</span> plt 
+<span style="color:#00f">import</span> os
+<span style="color:#00f">from</span> random <span style="color:#00f">import</span> randint
+<span style="color:#00f">from</span> keras <span style="color:#00f">import</span> utils
+<span style="color:#00f">from</span> keras.preprocessing.image <span style="color:#00f">import</span> ImageDataGenerator
+<span style="color:#00f">from</span> keras.models <span style="color:#00f">import</span> Sequential, load_model
+<span style="color:#00f">from</span> keras.layers <span style="color:#00f">import</span> GlobalAveragePooling2D, Activation, Conv2D, MaxPooling2D
+<span style="color:#00f">from</span> keras.losses <span style="color:#00f">import</span> categorical_crossentropy
+<span style="color:#00f">from</span> keras <span style="color:#00f">import</span> losses
+<span style="color:#00f">from</span> keras <span style="color:#00f">import</span> callbacks
+<span style="color:#00f">from</span> keras <span style="color:#00f">import</span> optimizers
+<span style="color:#00f">from</span> imageio <span style="color:#00f">import</span> imread
+</code></pre></div><h1 id="getting-the-training-data">Getting the Training Data</h1>
+<p>What I like a lot about this series of challanges is that there is no additional data provided. The only piece of data at my disposal is a single 450x60px CAPTCHA image that changes as the webpage is refreshed. This is a very unusual situation for a person who is used to applying machine learning in situations when lots of training data is available (e.g. assignments for online courses, Kaggle challanges).</p>
+<p>No programming was involved for this part. Since there are 12 different symbols and an immense number of ways how they can appear on the image, the best I can do at this point is to get a single example of each symbol. I download several images and use <a href="https://www.gimp.org/">GIMP</a> to cut out 20x60px parts, each containing a single symbol. The choice of cut out image dimensions is not arbitrary; it is required to make the object detection algorithm that I use later to work. As mentioned earlier, the height of a CAPTCHA image is 60px; each symbol has a diameter of 17-18px. So a resulting 20x60px image, that is centered horizontally on a symbol, has this symbol fully inside the image with an arbitrary vertical translation. Then I used GIMP to center the symbol vertically. I am pretty sure that the last step is not required, but it simplifies the process of augmented data generation and (probably) speeds up the training process as a result.</p>
+<p>Here is the result of manual training data collection and initial preprocessing:</p>
+<p><img src="/cnn-captcha-attack/collected_data.png" alt="Collected data"></p>
+<h1 id="training-data-preprocessing">Training Data Preprocessing</h1>
+<p>This was the most challanging part of the challange for me. Since I didn&rsquo;t have the resources to collect and label a dataset large enough to train an unbiased model, I decided to generate training data that would look like it came from the same distribution as original symbols in the CAPTHCA image.</p>
+<p>Tensor image data generator that is provided by Keras library is good at adding translational and rotational augmentations to generated data. The next section describes that process in detail. However, this image data generator doesn&rsquo;t have built-in capabilities that allow color augmentation. And I couldn&rsquo;t think of a preprocessing function that would generate color that comes from the same distribution as color in CAPTCHAs. The easiest solution left is to eliminate color altogether with the help of the following functions:</p>
+<div class="highlight"><pre style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python"><span style="color:#008000"># RGB to grayscale conversion</span>
+<span style="color:#00f">def</span> rgb2gray(rgb):
+    <span style="color:#00f">return</span> np.dot(rgb[...,:3], [0.299, 0.587, 0.114])
+
+<span style="color:#00f">def</span> img_preprocess(img):
+    img_no_alpha = img[:,:,0:3] <span style="color:#008000"># Strip 4-th channel (alpha). Shape is (60,20,3)</span>
+    img_gray = rgb2gray(img_no_alpha) <span style="color:#008000"># Outputs matrix of shape (60,20)</span>
+    img_gray[img_gray &lt;= 30] = 0 <span style="color:#008000"># Make background black</span>
+    img_gray[img_gray &gt; 30] = 255 <span style="color:#008000"># Make the rest white</span>
+    img_processed = img_gray / 255 <span style="color:#008000"># Center pixel values</span>
+    <span style="color:#00f">return</span> img_processed
+</code></pre></div><p>It&rsquo;s possible to import a <code>rgb2gray()</code> function from an existing library, i.e. <a href="http://scikit-image.org/docs/dev/api/skimage.color.html#skimage.color.rgb2gray">color.rgb2gray</a> in <a href="http://scikit-image.org/">scikit-image</a> library. That implementation centers the image tensors (the output pixel values become floats in a range [0,1]). I preferred to center the image tensors as a last step in preprocessing, so I defined my own function.</p>
+<p>Now on to loading 12 training images and some further preprocessing.</p>
+<div class="highlight"><pre style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python">%matplotlib inline
+
+train_data_path = <span style="color:#a31515">&#39;/data/train/*&#39;</span>
+abs_path = os.getcwd()
+path = abs_path + train_data_path
+
+img_arr = []
+
+<span style="color:#00f">for</span> img_file <span style="color:#00f">in</span> glob.glob(path):
+        train_img = imread(img_file) <span style="color:#008000"># Outputs tensor of shape (60,20,4)</span>
+        train_img_processed = img_preprocess(train_img)
+        img_arr.append(train_img_processed)
+</code></pre></div><p>Here are images of intermediate results to help understand the preprocessing steps.</p>
+<div class="highlight"><pre style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python"><span style="color:#008000"># Show original RGB image</span>
+plt.figure(1, figsize=(10, 10))
+plt.subplot(131)
+plt.imshow(train_img)
+
+<span style="color:#008000"># Show grayscale image. Some limited information about original color is still preserved.</span>
+plt.subplot(132)
+plt.imshow(rgb2gray(train_img))
+
+<span style="color:#008000"># Show final processed image that has only two possible pixel values - 0 or 1.</span>
+<span style="color:#008000"># No color information is preserved while the general shape of the symbol is.</span>
+plt.subplot(133)
+plt.imshow(train_img_processed)
+plt.show()
+</code></pre></div><p><img src="/cnn-captcha-attack/2017-11-18-attack-on-captcha-using-convnets_10_0.png" alt="Imshow"></p>
+<p>There are a few more steps left to make this training data work with Keras.</p>
+<div class="highlight"><pre style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python"><span style="color:#00f">def</span> img_arr_to_4D(img_arr):
+    X = np.stack(img_arr, axis=2) <span style="color:#008000"># Stack along 3-rd dimension. Outputs tensor of shape (60,20,12)</span>
+    X = np.rollaxis(X, 2) <span style="color:#008000"># Changes tensor shape to (12,60,20). Keras with Tensorflow backend needs this format.</span>
+    X = np.expand_dims(X, 3) <span style="color:#008000"># Add a fourth dimension. Conv2D() accepts 4D tensors only as input.</span>
+    <span style="color:#00f">return</span> X
+
+X_train = img_arr_to_4D(img_arr)
+X_train.shape
+</code></pre></div><pre><code>(12, 60, 20, 1)
+</code></pre>
+<p>Now that the training data is preprocessed and in Keras-friendly format, it needs to be labeled. The labels and their order may seem a bit weird. There are lots of different ways to label this data. I chose a simple mapping: 0 ⇒ :D, 1 ⇒ :) and so on. Numbers in my mapping correspond to the order in which the symbol to string mapping is shown in the challange.</p>
+<div class="highlight"><pre style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python">Y_train = np.array([0,1,10,11,2,3,4,5,6,7,8,9]) <span style="color:#008000"># Label training examples</span>
+Y_train = utils.to_categorical(Y_train, num_classes=12) <span style="color:#008000"># Converts a class vector to one-hot matrix</span>
+</code></pre></div><p>As for the order of labels in the <code>Y_train</code> array, it is the way it is because of the order in which the images were loaded in the for-loop in code section 19. First <code>0.png</code> was loaded, then <code>1.png</code>, <code>10.png</code>, <code>11.png</code>, <code>2.png</code> and so on.</p>
+<h1 id="augmented-data-generation">Augmented Data Generation</h1>
+<p>Training neural networks requires large amount of training data; certainly larger than 12 examples that were extracted manually.</p>
+<p>The problem of varying color was solved at preprocessing step by applying a grascale filter and then limiting the pixel values to only two possible states (0 or 1). Now, the training data needs to represent all 12 possible symbols with two types of image transformations applied: random shifts along the vertical axis and random rotations.</p>
+<p>It is possible use <a href="https://keras.io/preprocessing/image/"><code>ImageDataGenerator</code></a> to generate batches of augmented tensor image data at training time.</p>
+<p>Here is how I defined the generator:</p>
+<div class="highlight"><pre style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python">datagen = ImageDataGenerator(height_shift_range=0.50, width_shift_range=0.02, 
+                                 rotation_range=360, fill_mode=<span style="color:#a31515">&#39;constant&#39;</span>, cval = 0)
+</code></pre></div><p>The arguments are easy to understand:</p>
+<ul>
+<li>
+<p><code>height_shift_range=0.50</code> - image data can be shifted randomly along the vertical axis by 50% of its total height at most.</p>
+</li>
+<li>
+<p><code>width_shift_range=0.02</code> - image data can be shifted randomly along the horizontal axis by 2% of its total width at most. This argument is not strictly required. Because of the way the sliding window reads the test data, a symbol will always be centered horizontally in the 60x20 image. I added this as a countermeasure for possible overfitting.</p>
+</li>
+<li>
+<p><code>rotation_range=360</code> - image data can be rotated randomly by 360° at most. I am not sure if random rotations happen in both directions (in such case 180° would suffice).</p>
+</li>
+<li>
+<p><code>fill_mode='constant</code> - when an image is rotated or shifted, there will be data points outside of boundaries of an input. They are going to be filled with zeroes (background color)</p>
+</li>
+<li>
+<p><code>ImageDataGenerator</code> generates augmented image data in real time during training and can do so indefinitely. It is useful to have a rough idea of what kind of augmented data will be supplied to the CNN. <code>ImageDataGenerator</code>'s <code>flow()</code> method returns <code>NumpyArrayIterator</code> which can be used to generate and view a sample of augmented image data.</p>
+</li>
+</ul>
+<div class="highlight"><pre style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python">datagen_iter = datagen.flow(X_train, batch_size=10)
+
+datagen_sample = datagen_iter.next()
+
+plt.figure(1, figsize=(15, 15))
+
+<span style="color:#00f">for</span> i, img <span style="color:#00f">in</span> enumerate(datagen_sample):
+    plt.subplot(2,5,i+1)
+    plt.imshow(img[:,:,0])
+</code></pre></div><p><img src="/cnn-captcha-attack/2017-11-18-attack-on-captcha-using-convnets_20_0.png" alt="Imshow"></p>
+<h1 id="cnn-model-architecture">CNN Model Architecture</h1>
+<p>I started studying CNNs only a few weeks before I attempted this challange. Naturally, I didn&rsquo;t have a good intuition about what constitutes a good CNN model architecture, apart from simple facts that apply to all neural networks: use bigger network to avoid bias, use more data to avoid overfitting.</p>
+<p>I decided to simply copy a model I like from some whitepaper. <a href="https://youtu.be/u6aEYuemt0M?t=1h3m40s">According to Andrej Karpathy</a>, this is a very solid approach for practical applications. Since my problem is relatively simple, I don&rsquo;t need to use a model that performs well on some complex dataset, like <a href="http://www.image-net.org/challenges/LSVRC/">ILSVRC</a>. I searched for a model that does reasonably well on <a href="https://www.cs.toronto.edu/~kriz/cifar.html">CIFAR-10</a> since it is a popular dataset that is somewhat similar to mine. CIFAR-10 consists of 60000 32x32 colour images in 10 classes. My dataset consists of an arbitrarily large number of 60x20 grayscale images in 12 classes.</p>
+<p>I skimmed through a couple of papers until I stumbled on the one I really liked: <a href="https://arxiv.org/abs/1412.6806"><em>Striving for Simplicity: The All Convolutional Net</em></a>. The authors were looking to simplify conventional approach to model architecture. They decided not to use fully-connected layers at the higher layers of the network in order to reduce the number of parameters in the network. It suited me well, since I didn&rsquo;t want to spend lots of time training the network on my laptop. I tried several models from that paper (model descriptions appear on pages 3 and 4), including All-CNN model which uses convolutional layers only (for downsampling it uses convolutional layers with stride larger than 1). In the end, I went with the base model C (page 3). It offered fastest initial learning rate and has only ~950,000 parameters, which is very impressive.</p>
+<div class="highlight"><pre style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python">model = Sequential()
+model.add(Conv2D(96, kernel_size=(3, 3), activation=<span style="color:#a31515">&#39;relu&#39;</span>,
+                padding = <span style="color:#a31515">&#39;same&#39;</span>, input_shape=(60,20,1)))
+model.add(Conv2D(96, (3, 3), activation=<span style="color:#a31515">&#39;relu&#39;</span>, padding = <span style="color:#a31515">&#39;same&#39;</span>))
+model.add(MaxPooling2D(pool_size=(3, 3), strides = 2))
+model.add(Conv2D(192, (3, 3), activation=<span style="color:#a31515">&#39;relu&#39;</span>, padding = <span style="color:#a31515">&#39;same&#39;</span>))
+model.add(Conv2D(192, (3, 3), activation=<span style="color:#a31515">&#39;relu&#39;</span>, padding = <span style="color:#a31515">&#39;same&#39;</span>))
+model.add(MaxPooling2D(pool_size=(3, 3), strides = 2))
+model.add(Conv2D(192, (3, 3), activation=<span style="color:#a31515">&#39;relu&#39;</span>, padding = <span style="color:#a31515">&#39;same&#39;</span>))
+model.add(Conv2D(192, (1, 1), activation=<span style="color:#a31515">&#39;relu&#39;</span>))
+model.add(Conv2D(12, (1, 1), activation=<span style="color:#a31515">&#39;relu&#39;</span>))
+model.add(GlobalAveragePooling2D(<span style="color:#a31515">&#39;channels_last&#39;</span>))
+model.add(Activation(activation=<span style="color:#a31515">&#39;softmax&#39;</span>))
+
+<span style="color:#008000"># Model architecture summary:</span>
+
+model.summary()
+
+</code></pre></div><pre><code>_________________________________________________________________
+Layer (type)                 Output Shape              Param #   
+=================================================================
+conv2d_8 (Conv2D)            (None, 60, 20, 96)        960       
+_________________________________________________________________
+conv2d_9 (Conv2D)            (None, 60, 20, 96)        83040     
+_________________________________________________________________
+max_pooling2d_3 (MaxPooling2 (None, 29, 9, 96)         0         
+_________________________________________________________________
+conv2d_10 (Conv2D)           (None, 29, 9, 192)        166080    
+_________________________________________________________________
+conv2d_11 (Conv2D)           (None, 29, 9, 192)        331968    
+_________________________________________________________________
+max_pooling2d_4 (MaxPooling2 (None, 14, 4, 192)        0         
+_________________________________________________________________
+conv2d_12 (Conv2D)           (None, 14, 4, 192)        331968    
+_________________________________________________________________
+conv2d_13 (Conv2D)           (None, 14, 4, 192)        37056     
+_________________________________________________________________
+conv2d_14 (Conv2D)           (None, 14, 4, 12)         2316      
+_________________________________________________________________
+global_average_pooling2d_2 ( (None, 12)                0         
+_________________________________________________________________
+activation_2 (Activation)    (None, 12)                0         
+=================================================================
+Total params: 953,388
+Trainable params: 953,388
+Non-trainable params: 0
+_________________________________________________________________
+</code></pre>
+<p>The model uses categorical crossentropy loss function, since the problem is a discrete classification task in which the classes are mutually exclusive. Adam optimizer is used, since it is very popular among the researchers and I have a good understanding of how it works. Accuracy is used to measure the model&rsquo;s performance during training, so we know when to stop (the training can go on forever since the training data is generated in real time).</p>
+<div class="highlight"><pre style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python">model.compile(loss=losses.categorical_crossentropy,
+                  optimizer=optimizers.Adam(),
+                  metrics=[<span style="color:#a31515">&#39;accuracy&#39;</span>])  
+</code></pre></div><p>The following code creates a callback function that saves the model during training. I decided to save every 5th model and only if it&rsquo;s better than the previous saved one. Each model is ~80M so the size of the checkpoints directory can grow really quickly if the training rate is slow.</p>
+<div class="highlight"><pre style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python">filepath = <span style="color:#a31515">&#39;models/captcha4.{epoch:02d}-{loss:.2f}.hdf5&#39;</span>
+checkpoint = callbacks.ModelCheckpoint(filepath, monitor=<span style="color:#a31515">&#39;loss&#39;</span>, verbose=0, 
+                                                 save_best_only=True, mode=<span style="color:#a31515">&#39;auto&#39;</span>, period=5)
+</code></pre></div><h1 id="cnn-model-training">CNN Model Training</h1>
+<p>Finally, everything is set up for training!</p>
+<p>The next function trains the model using the data generated by <code>datagen</code> image generator that was defined earlier. The choice of the batch size and the number of steps per epoch is mostly arbitrary. Usually it is advised to have a bigger batch size, if you can afford it, since the gradient descent will move more smoothly towards the local optima. I set the batch size to be pretty low since I tried out lots of different models and wanted to see quickly if they work well or not.</p>
+<p>The number of epochs does not really matter as checkpoints are created along the way and the training can be stopped at any time.</p>
+<p>80% accuracy can be obtained after only 30 or so epochs. After 30 minutes of training (100 epochs) the gradient descent slows down; the model has a training accuracy of ~95% at that point. Around epoch 150 it seems like the gradient descent converges to a model with ~98-99% training accuracy, &gt;0.05 training loss. I ran the model for 500 epochs in total and did not see any substantial improvement. The model that is loaded in the last section of this notebook has an accuracy of &gt;99% and &lt;0.01 loss (saved at epoch 250).</p>
+<div class="highlight"><pre style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python"><span style="color:#008000"># Only run if you are ready to wait for at least 30 minutes</span>
+
+<span style="color:#008000">#model.fit_generator(datagen.flow(X_train, Y_train, batch_size=15),</span>
+<span style="color:#008000">#                    steps_per_epoch=60, epochs=10000, callbacks = [checkpoint], use_multiprocessing=True)</span>
+</code></pre></div><p>Here are Tensorboard visualisations of the training process. Y-axis is loss/accuracy, X-axis is # of epochs.</p>
+<figure>
+    <img src="/cnn-captcha-attack/tensorboard/loss.svg"/> <figcaption>
+            <h4>Training Loss</h4>
+        </figcaption>
+</figure>
+
+<figure>
+    <img src="/cnn-captcha-attack/tensorboard/acc.svg"/> <figcaption>
+            <h4>Training Accuracy</h4>
+        </figcaption>
+</figure>
+
+<h1 id="model-testing-individual-symbol-detection">Model Testing: Individual Symbol Detection</h1>
+<p>The CAPTCHA challange has a clearly defined objective: the correct CAPTCHA has to be submitted to the website during a 10-second time period after the webpage is reloaded. Therefore, no test set was created, nor did I measured the test performace using any conventional metric. I wrote a function (not included in this write-up) that authenticates on the website, reloads the webpage with CAPTCHA, gets CAPTCHA image and passess it to another function along with the trained model. That function uses the model to read the CAPTCHA, outputs its contents as a string which is then posted to the webpage. My only &ldquo;performance metric&rdquo; was a string at the top of the webpage which indicated whether the challange is &ldquo;Incomplete&rdquo; or &ldquo;Complete&rdquo;.</p>
+<p>First, test image needs to be loaded. Instead of getting a new image directly from the website, like I did for the actual challange, 1 of 5 images that I downloaded in advance is randomly selected and used for testing in this notebook.</p>
+<div class="highlight"><pre style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python">test_img_file = <span style="color:#a31515">&#39;data/examples/captcha4_{}.png&#39;</span>.format(randint(1, 5))
+test_captcha = imread(test_img_file) <span style="color:#008000"># Load (60, 450, 3) image</span>
+test_img = img_preprocess(test_captcha) <span style="color:#008000"># Apply same preprocessing as to train images. Output is (60, 450)</span>
+
+plt.figure(1, figsize=(20, 20))
+plt.imshow(test_img)
+</code></pre></div><p><img src="/cnn-captcha-attack/2017-11-18-attack-on-captcha-using-convnets_32_1.png" alt="Imshow"></p>
+<p>The following code represents a very rudimentary approach to individual symbol detection in the 450x60 RGB CAPTCHA image that is presented on the challange&rsquo;s webpage. I didn&rsquo;t have a chance to research more advanced methods for object detection, so I came up with my simple implementation of sliding window. I don&rsquo;t like that it requires very specific conditions to be fulfilled; the train image size and some image preprocessing steps were there just to make this method work. But it works for this particular task, which is what really matters in the end.</p>
+<p>First, some variables that are used by the sliding window are defined. The most important variable is <code>dark strip</code>. It is a column vector of length 60 filled with zeros. It is going to be used to check if edges of the moving window and the moving window&rsquo;s center intersect any symbol.</p>
+<div class="highlight"><pre style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python">dark_strip = np.zeros((60, 1), dtype=<span style="color:#a31515">&#39;float64&#39;</span>)  <span style="color:#008000"># Create black vertical strip of dim 60x1 </span>
+window_width = 20 <span style="color:#008000"># Sliding window width</span>
+img_width = test_img.shape[1] <span style="color:#008000"># 450 pixels</span>
+img_arr = []
+</code></pre></div><p>The width of the sliding window is 20 pixels and symbols are usually 17-18 pixels wide, therefore we can be certain that a symbol is within the window&rsquo;s edges completely when the window&rsquo;s edges don&rsquo;t intersect anything, but a vertical strip at the window&rsquo;s center intersects something. The following visualisation can be helpful to understand how it works:</p>
+<p><img src="/cnn-captcha-attack/moving_window_visualisation.png" alt="Moving window viz"></p>
+<p>The window moves from left to right one pixel at a time. When it detects a symbol, it saves the contents of the window to an array and jumps over 20 pixel (since that horizontal stretch is already saved). In the visualisation, the window&rsquo;s edges are represented by two red lines, the window&rsquo;s middle is represented by a red line that is yellow in parts where it intersects a symbol. In this particular example the window has detected a symbol: both edges are not intersecting anything but the center line intersects the symbol.</p>
+<div class="highlight"><pre style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python"><span style="color:#008000"># Sliding window</span>
+window_left_edge = 0 <span style="color:#008000"># Starting position is at leftmost end of the image</span>
+
+<span style="color:#00f">while</span> window_left_edge &lt; (img_width - window_width):
+
+    window_right_edge = window_left_edge + window_width <span style="color:#008000"># Make window 20 pixels wide at its current position</span>
+    window_middle = window_left_edge + (window_width // 2)
+
+    left_clear = np.all(test_img[:,window_left_edge] == dark_strip) <span style="color:#008000"># Check if window&#39;s left edge is clear</span>
+    right_clear = np.all(test_img[:,window_right_edge] == dark_strip) <span style="color:#008000"># Check if window&#39;s right edge is clear</span>
+    center_not_clear = np.any(test_img[:,window_middle] != dark_strip) <span style="color:#008000"># Check if window&#39;s center intersects something</span>
+    
+    <span style="color:#008000"># Check that left and right strips are dark and center strip is not dark (means centered on symbol)</span>
+    <span style="color:#00f">if</span> (left_clear <span style="color:#00f">and</span> right_clear <span style="color:#00f">and</span> center_not_clear):
+        img_arr.append(test_img[:,window_left_edge:window_right_edge]) <span style="color:#008000"># append the contents of the window to array</span>
+        window_left_edge = window_right_edge <span style="color:#008000"># can jump over the next 20 pixels as window detected symbol here</span>
+        
+    window_left_edge += 1 <span style="color:#008000"># Move window by 1 pixel to the left   </span>
+</code></pre></div><div class="highlight"><pre style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python"><span style="color:#008000"># Stack captured test images into a single numpy array</span>
+X_test = img_arr_to_4D(img_arr)
+X_test.shape <span style="color:#008000"># Check that 10 symbols were captured</span>
+</code></pre></div><pre><code>(10, 60, 20, 1)
+</code></pre>
+<div class="highlight"><pre style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python"><span style="color:#008000"># Show what sliding window captured</span>
+plt.figure(1, figsize=(15, 15))
+
+<span style="color:#00f">for</span> i, img <span style="color:#00f">in</span> enumerate(X_test):
+    plt.subplot(2,5,i+1)
+    plt.imshow(X_test[i,:,:,0])
+</code></pre></div><p><img src="/cnn-captcha-attack/2017-11-18-attack-on-captcha-using-convnets_38_0.png" alt="Imshow"></p>
+<p>Looks like the sliding window captured every symbol from CAPTCHA image; and these images have dimensions 20x60, the same that were used in training! Here&rsquo;s the entire processed CAPTCHA image again to make sure that nothing is missing.</p>
+<div class="highlight"><pre style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python">plt.figure(1, figsize=(20, 20))
+plt.imshow(test_img)
+</code></pre></div><p><img src="/cnn-captcha-attack/2017-11-18-attack-on-captcha-using-convnets_40_1.png" alt="Imshow"></p>
+<h1 id="model-testing-prediction">Model Testing: Prediction</h1>
+<p>All the hard work is done at this point. The only thing left is to load a pre-trained model and apply it to data extracted in the previous section.</p>
+<div class="highlight"><pre style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python">model = load_model(<span style="color:#a31515">&#39;models/captcha4.249-0.00.hdf5&#39;</span>) <span style="color:#008000"># Load pre-trained model (loss: &lt;0.01 after 165 epochs)</span>
+pred = model.predict(X_test, batch_size = 12) <span style="color:#008000"># Predict label probabilities for each image </span>
+pred = np.argmax(pred, axis=1) <span style="color:#008000"># Select label with highest probability</span>
+
+<span style="color:#008000"># Define mapping that was introduced back in Training Data Preprocessing section.</span>
+mapping = {0: <span style="color:#a31515">&#39;:D&#39;</span>,
+           1: <span style="color:#a31515">&#39;:)&#39;</span>,
+           2: <span style="color:#a31515">&#39;:p&#39;</span>,
+           3: <span style="color:#a31515">&#39;:(&#39;</span>,
+           4: <span style="color:#a31515">&#39;;)&#39;</span>,
+           5: <span style="color:#a31515">&#39;B)&#39;</span>,
+           6: <span style="color:#a31515">&#39;:@&#39;</span>,
+           7: <span style="color:#a31515">&#39;:o&#39;</span>,
+           8: <span style="color:#a31515">&#39;:s&#39;</span>,
+           9: <span style="color:#a31515">&#39;:|&#39;</span>,
+           10: <span style="color:#a31515">&#39;:/&#39;</span>,
+           11: <span style="color:#a31515">&#39;&lt;3&#39;</span>
+        }
+
+<span style="color:#008000"># Print answer to CAPTCHA</span>
+answer = <span style="color:#a31515">&#39;&#39;</span>
+
+<span style="color:#00f">for</span> label <span style="color:#00f">in</span> pred:
+    answer+=mapping[label]
+    answer+=<span style="color:#a31515">&#39; &#39;</span> <span style="color:#008000"># Add spaces for easier comprehension</span>
+<span style="color:#00f">print</span>(<span style="color:#a31515">&#39;CAPTCHA: {}&#39;</span>.format(answer))
+
+<span style="color:#008000"># Print CAPTCHA image for visual evaluation</span>
+plt.figure(1, figsize=(20, 20))
+plt.imshow(test_captcha)
+</code></pre></div><pre><code>CAPTCHA: :/ :D :| :D :@ :D :D :( &lt;3 :p 
+</code></pre>
+<p><img src="/cnn-captcha-attack/2017-11-18-attack-on-captcha-using-convnets_42_2.png" alt="Imshow"></p>
+<p>You can notice that the model can make a mistake when recognizing 1 or 2 symbols from an image. I explain why this is acceptable in the last section.</p>
+<h1 id="final-thoughts">Final Thoughts</h1>
+<p>Now, after completing the challange, I realize that there is a way to develop a more accurate and consitent model. It consist of writing a script that pulls a few dozens of CAPTCHA images from the challange&rsquo;s website, using the sliding window to extract few hundreds of images with individual symbols, manually labeling these images and using this larger &ldquo;seed&rdquo; dataset to generate a training dataset. This dataset will probably be better at representing the original data distribution that is used to generate CAPTCHAs for the challange. However, I have two problems with this approach:</p>
+<ol>
+<li>Manual dataset labeling is boring. From the start, I wanted to avoid doing that so I labeled the smallest possible number of images - 12, since there are 12 possible classes.</li>
+<li>The entire point of this challange was to &ldquo;break&rdquo; the CAPTCHA. I touched on this in the first Model Testing section. This challange is not a Kaggle competition and there is no leaderboard with ranking based on model accuracy. Even if the model predicts all 10 symbols in 1 out of 5 CAPTCHAs, the CAPTCHA is not secure anymore, it&rsquo;s broken.</li>
+</ol>
+<p>Any real world CAPTCHA system allows a user to make at least several attempts before blocking the IP address. I got lucky when I first attempted to read and submit CAPTCHA using the model described in this write-up: it worked on the first try. I would still consider this model a working one if it worked only on the 10th try. Different applications have different definitions of what a successful solution is.</p>
+<h1 id="better-approaches">Better approaches?</h1>
+<p>There are machine learning-based approaches to attack complex image-based CAPTCHAs that train fast and use a relatively small training set (like in <a href="http://science.sciencemag.org/sites/all/libraries/pdfjs/web/viewer.html?file=/content/sci/early/2017/10/26/science.aag2612.full.pdf">this research paper</a>). I wanted to say that using something like <a href="https://www.google.com/recaptcha/intro/index.html">reCAPTCHA</a> is better, but its audio challange for visually-impaired users <a href="http://uncaptcha.cs.umd.edu/">was broken</a> just recently.</p>
+
+</main>
+
+  </div> 
+  <footer>
+  
+  <hr/>
+  <div class="container">
+  <a href="https://github.com/mmxmb">Github</a> / <a href="https://twitter.com/mmxxmb">Twitter</a> / <a href="https://www.linkedin.com/in/mmxmb/">LinkedIn</a> / <a href="/index.xml">RSS</a>
+  
+  </footer>
+  </body>
+  </div>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.11.1/dist/katex.min.css" integrity="sha384-zB1R0rpPzHqg7Kpt0Aljp8JPLqbXI3bhnPWROx27a9N0Ll6ZP/+DiW/UqRcLbRjq" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.11.1/dist/katex.min.js" integrity="sha384-y23I5Q6l+B6vatafAwxRu/0oK/79VlbSz7Q9aiSZUvyWYIYsd+qj+o24G5ZU2zJz" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.11.1/dist/contrib/auto-render.min.js" integrity="sha384-kWPLUVMOks5AQFrykwIup5lo0m3iMkkHrD0uJ4H5cjeGihAutqP0yW0J6dpFiVkI" crossorigin="anonymous"
+    onload="renderMathInElement(document.body);"></script>
+
+</html>
+

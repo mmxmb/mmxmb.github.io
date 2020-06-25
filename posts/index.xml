@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Posts on mmxmb</title>
+    <link>http://example.org/posts/</link>
+    <description>Recent content in Posts on mmxmb</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Wed, 24 Jun 2020 18:10:16 -0400</lastBuildDate>
+    
+	<atom:link href="http://example.org/posts/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>BorgBackup on macOS</title>
+      <link>http://example.org/posts/borgbackup-on-macos/</link>
+      <pubDate>Wed, 24 Jun 2020 18:10:16 -0400</pubDate>
+      
+      <guid>http://example.org/posts/borgbackup-on-macos/</guid>
+      <description>Does the dandelion drop all its seeds at the base of its stalk? Does the cuckoo lay its eggs in one nest? So long as your backups are in one place, you are vulnerable to the fortunes of the world.
+- The Tao of Backup
+  Time Machine works well for local backups on macOS. Recently, I did an inventory of my data assets and came to the conclusion that it would be best to have an off-site backup of my data, in addition to a local Time Machine backup.</description>
+    </item>
+    
+    <item>
+      <title>Ensembling ConvNets using Keras</title>
+      <link>http://example.org/posts/ensembling-convnets-using-keras/</link>
+      <pubDate>Wed, 13 Dec 2017 00:00:00 +0000</pubDate>
+      
+      <guid>http://example.org/posts/ensembling-convnets-using-keras/</guid>
+      <description>This article was originally pusblished on Medium.com together with Towards Data Science.
+ Introduction  &amp;ldquo;In statistics and machine learning, ensemble methods use multiple learning algorithms to obtain better predictive performance than could be obtained from any of the constituent learning algorithms alone. Unlike a statistical ensemble in statistical mechanics, which is usually infinite, a machine learning ensemble consists of only a concrete finite set of alternative models, but typically allows for much more flexible structure to exist among those alternatives.</description>
+    </item>
+    
+    <item>
+      <title>Breaking CAPTCHAs using a CNN</title>
+      <link>http://example.org/posts/cnn-captcha-attack/</link>
+      <pubDate>Sat, 18 Nov 2017 00:00:00 +0000</pubDate>
+      
+      <guid>http://example.org/posts/cnn-captcha-attack/</guid>
+      <description>Introduction On one of my favorite wargame websites has a series of challanges on breaking CAPTCHA. It starts with a straightforward challange:
+ Please enter the CAPTCHA backwards Time remaining: 10.00 seconds
+ Since no distortions are introduced to the text and there are ~100 distinct shapes, there are plenty of ways to read the text off the image without resorting to machine learning.
+The next one is even easier - only 12 distinct shapes:</description>
+    </item>
+    
+  </channel>
+</rss>
