@@ -6,11 +6,6 @@ body {
   color: #1c0a10;
 }
 
-.container {
-  max-width: 800px;
-  position: relative;
-  margin: auto;
-}
 
 body a {
   color: #01649b;
@@ -30,16 +25,58 @@ body a:visited {
   margin-bottom: 15px;
 }
 
+.posts li:before {
+    content: "𓇳 ";
+}
+
 /* header and footer areas */
 .menu { 
   height: 1em; 
   padding: 10; 
 }
-.menu li { float: right; display: inline-block; }
-.menu li:first-child {
-  float: left;
-  font-size: 150%;
+
+/* desktop*/
+@media (min-width:600px) {
+  .menu li { 
+    float: center; 
+    display: inline-block; 
+  }
+
+  .menu li:first-child {
+    float: left;
+    font-size: 150%;
+    margin-right: 15%;
+  }
+
+  .container {
+    max-width: 800px;
+    position: relative;
+    margin: auto;
+  }
 }
+
+/* mobile */
+@media (max-width:599px) { 
+
+  .menu li:first-child {
+    float: center;
+    font-size: 150%;
+    width: 100%;
+  }
+
+  .menu li { 
+    float: center; 
+    display: inline-block; 
+  }
+
+  .container {
+    max-width: 800px;
+    position: relative;
+    margin: 0 0 14% 0;
+  }
+}
+
+
 body .menu a {
   color: #1c0a10;
 }
