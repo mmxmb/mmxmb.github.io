@@ -39,7 +39,7 @@ body a:visited {
 @media (min-width:600px) {
   .menu li { 
     float: center; 
-    display: inline-block; 
+    display: inline-block;
   }
 
   .menu li:first-child {
@@ -58,8 +58,13 @@ body a:visited {
 /* mobile */
 @media (max-width:599px) { 
 
+  .menu {
+    padding: 0;
+    text-align: center;
+  }
+
   .menu li:first-child {
-    float: center;
+    margin: 0 auto;
     font-size: 150%;
     width: 100%;
   }
