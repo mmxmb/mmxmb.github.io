@@ -6,10 +6,19 @@
     <description>Recent content in Tags on Maxim Mikhaylov</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
-    <lastBuildDate>Wed, 24 Jun 2020 18:10:16 -0400</lastBuildDate>
+    <lastBuildDate>Thu, 09 Jul 2020 00:00:00 +0000</lastBuildDate>
     
 	<atom:link href="http://example.org/tags/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>backup</title>
+      <link>http://example.org/tags/backup/</link>
+      <pubDate>Thu, 09 Jul 2020 00:00:00 +0000</pubDate>
+      
+      <guid>http://example.org/tags/backup/</guid>
+      <description></description>
+    </item>
     
     <item>
       <title>macOS</title>

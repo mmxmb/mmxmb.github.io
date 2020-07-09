@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Backing up Android with BorgBackup | Maxim Mikhaylov</title>
+    <link rel="stylesheet" href="/css/style.css" />
+    <link rel="stylesheet" href="/css/fonts.css" />
+  </head>
+
+  <body>
+    <div class="container">
+    <nav>
+    <ul class="menu">
+      <li> <a href="/">Maxim Mikhaylov</a></li>
+      
+      <li><a href="/tags/">Tags</a></li>
+      
+      <li><a href="/contact/">Contact</a></li>
+      
+      <li><a href="/about/">About</a></li>
+      
+    </ul>
+    </nav>
+    </div>
+    <hr/>
+    <div class="container">
+
+
+<div class="article-meta">
+  <h1><span class="title">Backing up Android with BorgBackup</span></h1>
+  
+  <h4 class="date"><a title="Publishing date." style="color: #000">July 9, 2020</a> - <a title="Date of the last major modification to this page." style="color: #000">July 9, 2020</a></h4>
+  
+</div>
+
+<main>
+  <p>Is there a simple way to backup non-rooted Android phone to a Borg repo? Since the phone is non-rooted, this greatly limits the kind of files that can be accessed and backed up. For instance, if you want to backup a Google Authenticator database, root is needed to access<code>/data/data/com.google.android.apps.authenticator2/databases/databases</code> (see <a href="https://android.stackexchange.com/questions/63252/how-do-i-back-up-google-authenticator">this Android Stack Exchange question</a>). But if you want to only backup data from device user storage, then root is not needed.</p>
+<p>In my case, I realized that the only type of data that I really care about on my phone is pictures; they are stored in <code>/storage/self/primary/Pictures</code> and <code>/storage/self/primary/DCIM</code> on my phone. These directories are accessible without root.</p>
+<p>The easiest way to use Borg to backup these directories is to mount the smartphone storage to a local filesystem and then use Borg as usual. <a href="https://github.com/phatina/simple-mtpfs">simple-mtpfs</a> seems to work well for this purpose.</p>
+<blockquote>
+<p>SIMPLE-MTPFS (Simple Media Transfer Protocol FileSystem) is a file system for Linux (and other operating systems with a FUSE implementation, such as Mac OS X or FreeBSD) capable of operating on files on MTP devices attached via USB to local machine. On the local computer where the SIMPLE-MTPFS is mounted, the implementation makes use of the FUSE (Filesystem in Userspace) kernel module. The practical effect of this is that the end user can seamlessly interact with MTP device files.</p>
+</blockquote>
+<h1 id="backup-script">Backup script</h1>
+<p>Below is the script that I use to backup smartphone pictures to a remote storagebox.</p>
+<p>The overall logic is as follows:</p>
+<ol>
+<li>Check that the expected device is connected: <code>simple-mtpfs --list-devices</code>.</li>
+<li>Mount device to an existing empty directory: <code>simple-mtpfs --verbose --device 1 /Users/mmxmb/phone_mnt</code>.</li>
+<li>Use Borg to backup pictures from <code>/Users/mmxmb/phone_mnt/Pictures</code> and <code>/Users/mmxmb/phone_mnt/DCIM</code>.</li>
+</ol>
+<div class="highlight"><pre style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash"><span style="color:#00f">#!/bin/sh
+</span><span style="color:#00f"></span>
+export BORG_REPO=<span style="color:#a31515">&#39;ssh://username@username.your-storagebox.de:23/./backup/phone-repo&#39;</span>
+export BORG_RSH=<span style="color:#a31515">&#39;ssh -i /Users/mmxmb/.ssh/storagebox_key&#39;</span>
+export BORG_PASSPHRASE=<span style="color:#a31515">&#39;VERY_LONG_PASSPHRASE&#39;</span>
+
+<span style="color:#008000"># directory where device is mounted</span>
+MOUNTPOINT=/Users/mmxmb/phone_mnt
+<span style="color:#008000"># &lt;number&gt;: &lt;device_name&gt; returned by simple-mtpfs --list-devices</span>
+EXPECTED_DEVICE_ID=<span style="color:#a31515">&#34;1: OnePlusONE A2001&#34;</span>
+
+<span style="color:#008000"># some helpers and error handling:</span>
+info() { printf <span style="color:#a31515">&#34;\n%s %s\n\n&#34;</span> <span style="color:#a31515">&#34;</span><span style="color:#00f">$(</span> date <span style="color:#00f">)</span><span style="color:#a31515">&#34;</span> <span style="color:#a31515">&#34;</span>$*<span style="color:#a31515">&#34;</span> &gt;&amp;2; }
+trap <span style="color:#a31515">&#34;kill </span>$SIMPLE_MTPFS_PID<span style="color:#a31515">; echo </span><span style="color:#00f">$(</span> date <span style="color:#00f">)</span><span style="color:#a31515"> Backup interrupted &gt;&amp;2; exit 2&#34;</span> INT TERM
+
+<span style="color:#008000"># if tmp mount directory does not exist, create it</span>
+<span style="color:#00f">if</span> [ ! -d <span style="color:#a31515">&#34;</span>$MOUNTPOINT<span style="color:#a31515">&#34;</span> ]; <span style="color:#00f">then</span>
+  /bin/mkdir $MOUNTPOINT
+<span style="color:#00f">fi</span>
+
+<span style="color:#008000"># check that the directory is empty</span>
+<span style="color:#00f">if</span> [ <span style="color:#a31515">&#34;</span><span style="color:#00f">$(</span>/bin/ls -A $MOUNTPOINT<span style="color:#00f">)</span><span style="color:#a31515">&#34;</span> ]; <span style="color:#00f">then</span>
+  info <span style="color:#a31515">&#34;Can&#39;t mount on a non-empty directory </span>$MOUNTPOINT<span style="color:#a31515">. Exiting.&#34;</span>
+  exit 1
+<span style="color:#00f">fi</span>
+
+<span style="color:#00f">if</span> [ ! -f /usr/local/bin/simple-mtpfs ]; <span style="color:#00f">then</span>
+  info <span style="color:#a31515">&#34;simple-mtpfs is not installed. Exiting.&#34;</span>
+  exit 1
+<span style="color:#00f">fi</span>
+
+ACTUAL_DEVICE_ID=<span style="color:#00f">$(</span>/usr/local/bin/simple-mtpfs --list-devices | /usr/bin/head -n 1<span style="color:#00f">)</span>
+
+<span style="color:#00f">if</span> [ <span style="color:#a31515">&#34;</span>$EXPECTED_DEVICE_ID<span style="color:#a31515">&#34;</span> != <span style="color:#a31515">&#34;</span>$ACTUAL_DEVICE_ID<span style="color:#a31515">&#34;</span> ]; <span style="color:#00f">then</span>
+  info <span style="color:#a31515">&#34;Expected device is not connected. Exiting.&#34;</span>
+  exit 1
+<span style="color:#00f">fi</span>
+
+<span style="color:#008000"># start simple-mtpfs in background</span>
+/usr/local/bin/simple-mtpfs --verbose --device 1 $MOUNTPOINT &amp;
+SIMPLE_MTPFS_PID=$!
+
+info <span style="color:#a31515">&#34;Starting backup&#34;</span>
+
+<span style="color:#008000"># create a daily backup</span>
+/usr/local/bin/borg create <span style="color:#a31515">\
+</span><span style="color:#a31515"></span>    --verbose <span style="color:#a31515">\
+</span><span style="color:#a31515"></span>   --list --filter=AME <span style="color:#a31515">\
+</span><span style="color:#a31515"></span>   --stats --show-rc <span style="color:#a31515">\
+</span><span style="color:#a31515"></span>   --compression auto,lzma,6 <span style="color:#a31515">\
+</span><span style="color:#a31515"></span>    <span style="color:#a31515">&#39;::phone-repo-weekly-{now}&#39;</span> <span style="color:#a31515">\
+</span><span style="color:#a31515"></span>    <span style="color:#a31515">&#34;</span>$MOUNTPOINT<span style="color:#a31515">/Pictures&#34;</span> <span style="color:#a31515">\
+</span><span style="color:#a31515"></span>    <span style="color:#a31515">&#34;</span>$MOUNTPOINT<span style="color:#a31515">/DCIM&#34;</span>
+
+backup_exit=$?
+
+info <span style="color:#a31515">&#34;Pruning repository&#34;</span>
+
+<span style="color:#008000"># prune the repo</span>
+/usr/local/bin/borg prune <span style="color:#a31515">\
+</span><span style="color:#a31515"></span>    --list --stats <span style="color:#a31515">\
+</span><span style="color:#a31515"></span>    --prefix <span style="color:#a31515">&#39;phone-repo-weekly-&#39;</span> <span style="color:#a31515">\
+</span><span style="color:#a31515"></span>    --show-rc <span style="color:#a31515">\
+</span><span style="color:#a31515"></span>    --keep-weekly 4 <span style="color:#a31515">\
+</span><span style="color:#a31515"></span>    --keep-monthly 6
+
+prune_exit=$?
+
+<span style="color:#008000"># use highest exit code as exit code</span>
+global_exit=<span style="color:#00f">$((</span> backup_exit &gt; prune_exit ? backup_exit : prune_exit <span style="color:#00f">))</span>
+
+<span style="color:#00f">if</span> [ <span style="color:#a31515">${</span>global_exit<span style="color:#a31515">}</span> -eq 1 ];
+<span style="color:#00f">then</span>
+    info <span style="color:#a31515">&#34;Backup and/or Prune finished with a warning&#34;</span>
+<span style="color:#00f">fi</span>
+
+<span style="color:#00f">if</span> [ <span style="color:#a31515">${</span>global_exit<span style="color:#a31515">}</span> -gt 1 ];
+<span style="color:#00f">then</span>
+    info <span style="color:#a31515">&#34;Backup and/or Prune finished with an error&#34;</span>
+<span style="color:#00f">fi</span>
+
+<span style="color:#008000"># send interrupt to simple-mtpfs process</span>
+kill $SIMPLE_MTPFS_PID
+<span style="color:#008000"># remove tmp mount dir</span>
+/bin/rm -r $MOUNTPOINT
+
+exit <span style="color:#a31515">${</span>global_exit<span style="color:#a31515">}</span>
+</code></pre></div><p>The script has to be ran manually since the smartphone has to be connected to the computer in USB file transfer mode (with USB debugging on). It&rsquo;s not super convenient but manageable.</p>
+<p>A more convenient solution for a remote backup would be to build BorgBackup and dependencies on the smartphone and setup a service to do the backup on the schedule. But for a local backup the above solution seem to be pretty optimal.</p>
+
+</main>
+
+  </div> 
+  <footer>
+  
+  <hr/>
+  <div class="container">
+  <a href="https://github.com/mmxmb">Github</a> / <a href="https://twitter.com/mmxxmb">Twitter</a> / <a href="https://www.linkedin.com/in/mmxmb/">LinkedIn</a> / <a href="/index.xml">RSS</a>
+  
+  </footer>
+  </body>
+  </div>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.11.1/dist/katex.min.css" integrity="sha384-zB1R0rpPzHqg7Kpt0Aljp8JPLqbXI3bhnPWROx27a9N0Ll6ZP/+DiW/UqRcLbRjq" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.11.1/dist/katex.min.js" integrity="sha384-y23I5Q6l+B6vatafAwxRu/0oK/79VlbSz7Q9aiSZUvyWYIYsd+qj+o24G5ZU2zJz" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.11.1/dist/contrib/auto-render.min.js" integrity="sha384-kWPLUVMOks5AQFrykwIup5lo0m3iMkkHrD0uJ4H5cjeGihAutqP0yW0J6dpFiVkI" crossorigin="anonymous"
+    onload="renderMathInElement(document.body);"></script>
+
+</html>
+

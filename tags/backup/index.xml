@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>backup on Maxim Mikhaylov</title>
+    <link>http://example.org/tags/backup/</link>
+    <description>Recent content in backup on Maxim Mikhaylov</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Thu, 09 Jul 2020 00:00:00 +0000</lastBuildDate>
+    
+	<atom:link href="http://example.org/tags/backup/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>Backing up Android with BorgBackup</title>
+      <link>http://example.org/posts/backing-up-android-with-borgbackup/</link>
+      <pubDate>Thu, 09 Jul 2020 00:00:00 +0000</pubDate>
+      
+      <guid>http://example.org/posts/backing-up-android-with-borgbackup/</guid>
+      <description>Is there a simple way to backup non-rooted Android phone to a Borg repo? Since the phone is non-rooted, this greatly limits the kind of files that can be accessed and backed up. For instance, if you want to backup a Google Authenticator database, root is needed to access/data/data/com.google.android.apps.authenticator2/databases/databases (see this Android Stack Exchange question). But if you want to only backup data from device user storage, then root is not needed.</description>
+    </item>
+    
+    <item>
+      <title>BorgBackup on macOS</title>
+      <link>http://example.org/posts/borgbackup-on-macos/</link>
+      <pubDate>Wed, 24 Jun 2020 18:10:16 -0400</pubDate>
+      
+      <guid>http://example.org/posts/borgbackup-on-macos/</guid>
+      <description>Does the dandelion drop all its seeds at the base of its stalk? Does the cuckoo lay its eggs in one nest? So long as your backups are in one place, you are vulnerable to the fortunes of the world.
+- The Tao of Backup
+  Time Machine works well for local backups on macOS. Recently, I did an inventory of my data assets and came to the conclusion that it would be best to have an off-site backup of my data, in addition to a local Time Machine backup.</description>
+    </item>
+    
+  </channel>
+</rss>

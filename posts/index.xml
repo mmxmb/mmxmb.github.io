@@ -6,10 +6,19 @@
     <description>Recent content in Posts on Maxim Mikhaylov</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
-    <lastBuildDate>Wed, 24 Jun 2020 18:10:16 -0400</lastBuildDate>
+    <lastBuildDate>Thu, 09 Jul 2020 00:00:00 +0000</lastBuildDate>
     
 	<atom:link href="http://example.org/posts/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>Backing up Android with BorgBackup</title>
+      <link>http://example.org/posts/backing-up-android-with-borgbackup/</link>
+      <pubDate>Thu, 09 Jul 2020 00:00:00 +0000</pubDate>
+      
+      <guid>http://example.org/posts/backing-up-android-with-borgbackup/</guid>
+      <description>Is there a simple way to backup non-rooted Android phone to a Borg repo? Since the phone is non-rooted, this greatly limits the kind of files that can be accessed and backed up. For instance, if you want to backup a Google Authenticator database, root is needed to access/data/data/com.google.android.apps.authenticator2/databases/databases (see this Android Stack Exchange question). But if you want to only backup data from device user storage, then root is not needed.</description>
+    </item>
     
     <item>
       <title>BorgBackup on macOS</title>
