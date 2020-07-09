@@ -42,7 +42,7 @@
 <p>SIMPLE-MTPFS (Simple Media Transfer Protocol FileSystem) is a file system for Linux (and other operating systems with a FUSE implementation, such as Mac OS X or FreeBSD) capable of operating on files on MTP devices attached via USB to local machine. On the local computer where the SIMPLE-MTPFS is mounted, the implementation makes use of the FUSE (Filesystem in Userspace) kernel module. The practical effect of this is that the end user can seamlessly interact with MTP device files.</p>
 </blockquote>
 <h1 id="backup-script">Backup script</h1>
-<p>Below is the script that I use to backup smartphone pictures to a remote storagebox.</p>
+<p>Below is the script that I use to backup smartphone pictures to a remote storagebox. See <a href="/posts/borgbackup-on-macos">the previous post</a> about the details of using BorgBackup on macOS.</p>
 <p>The overall logic is as follows:</p>
 <ol>
 <li>Check that the expected device is connected: <code>simple-mtpfs --list-devices</code>.</li>
