@@ -30,7 +30,7 @@
 <div class="article-meta">
   <h1><span class="title">Backing up Android with BorgBackup</span></h1>
   
-  <h4 class="date"><a title="Publishing date." style="color: #000">July 9, 2020</a> - <a title="Date of the last major modification to this page." style="color: #000">July 9, 2020</a></h4>
+  <h4 class="date"><a title="Publishing date." style="color: #000">July 9, 2020</a> - <a title="Date of the last major modification to this page." style="color: #000">July 10, 2020</a></h4>
   
 </div>
 
@@ -64,7 +64,7 @@ EXPECTED_DEVICE_ID=<span style="color:#a31515">&#34;1: OnePlusONE A2001&#34;</sp
 info() { printf <span style="color:#a31515">&#34;\n%s %s\n\n&#34;</span> <span style="color:#a31515">&#34;</span><span style="color:#00f">$(</span> date <span style="color:#00f">)</span><span style="color:#a31515">&#34;</span> <span style="color:#a31515">&#34;</span>$*<span style="color:#a31515">&#34;</span> &gt;&amp;2; }
 trap <span style="color:#a31515">&#34;kill </span>$SIMPLE_MTPFS_PID<span style="color:#a31515">; echo </span><span style="color:#00f">$(</span> date <span style="color:#00f">)</span><span style="color:#a31515"> Backup interrupted &gt;&amp;2; exit 2&#34;</span> INT TERM
 
-<span style="color:#008000"># if tmp mount directory does not exist, create it</span>
+<span style="color:#008000"># if mount directory does not exist, create it</span>
 <span style="color:#00f">if</span> [ ! -d <span style="color:#a31515">&#34;</span>$MOUNTPOINT<span style="color:#a31515">&#34;</span> ]; <span style="color:#00f">then</span>
   /bin/mkdir $MOUNTPOINT
 <span style="color:#00f">fi</span>
@@ -132,8 +132,6 @@ global_exit=<span style="color:#00f">$((</span> backup_exit &gt; prune_exit ? ba
 
 <span style="color:#008000"># send interrupt to simple-mtpfs process</span>
 kill $SIMPLE_MTPFS_PID
-<span style="color:#008000"># remove tmp mount dir</span>
-/bin/rm -r $MOUNTPOINT
 
 exit <span style="color:#a31515">${</span>global_exit<span style="color:#a31515">}</span>
 </code></pre></div><p>The script has to be ran manually since the smartphone has to be connected to the computer in USB file transfer mode (with USB debugging on). It&rsquo;s not super convenient but manageable.</p>
