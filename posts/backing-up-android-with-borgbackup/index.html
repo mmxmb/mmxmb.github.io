@@ -62,7 +62,7 @@ EXPECTED_DEVICE_ID=<span style="color:#a31515">&#34;1: OnePlusONE A2001&#34;</sp
 
 <span style="color:#008000"># some helpers and error handling:</span>
 info() { printf <span style="color:#a31515">&#34;\n%s %s\n\n&#34;</span> <span style="color:#a31515">&#34;</span><span style="color:#00f">$(</span> date <span style="color:#00f">)</span><span style="color:#a31515">&#34;</span> <span style="color:#a31515">&#34;</span>$*<span style="color:#a31515">&#34;</span> &gt;&amp;2; }
-trap <span style="color:#a31515">&#34;kill </span>$SIMPLE_MTPFS_PID<span style="color:#a31515">; echo </span><span style="color:#00f">$(</span> date <span style="color:#00f">)</span><span style="color:#a31515"> Backup interrupted &gt;&amp;2; exit 2&#34;</span> INT TERM
+trap <span style="color:#a31515">&#34;kill -9 </span>$SIMPLE_MTPFS_PID<span style="color:#a31515">; echo </span><span style="color:#00f">$(</span> date <span style="color:#00f">)</span><span style="color:#a31515"> Backup interrupted &gt;&amp;2; exit 2&#34;</span> INT TERM
 
 <span style="color:#008000"># if mount directory does not exist, create it</span>
 <span style="color:#00f">if</span> [ ! -d <span style="color:#a31515">&#34;</span>$MOUNTPOINT<span style="color:#a31515">&#34;</span> ]; <span style="color:#00f">then</span>
@@ -131,7 +131,7 @@ global_exit=<span style="color:#00f">$((</span> backup_exit &gt; prune_exit ? ba
 <span style="color:#00f">fi</span>
 
 <span style="color:#008000"># send interrupt to simple-mtpfs process</span>
-kill $SIMPLE_MTPFS_PID
+kill -9 $SIMPLE_MTPFS_PID
 
 exit <span style="color:#a31515">${</span>global_exit<span style="color:#a31515">}</span>
 </code></pre></div><p>The script has to be ran manually since the smartphone has to be connected to the computer in USB file transfer mode (with USB debugging on). It&rsquo;s not super convenient but manageable.</p>
