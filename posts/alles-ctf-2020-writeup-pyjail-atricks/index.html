@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>ALLES! CTF 2020 Writeup: Pyjail ATricks | Maxim Mikhaylov</title>
+    <link rel="stylesheet" href="/css/style.css" />
+    <link rel="stylesheet" href="/css/fonts.css" />
+  </head>
+
+  <body>
+    <div class="container">
+    <nav>
+    <ul class="menu">
+      <li> <a href="/">Maxim Mikhaylov</a></li>
+      
+      <li><a href="/tags/">Tags</a></li>
+      
+      <li><a href="/contact/">Contact</a></li>
+      
+      <li><a href="/about/">About</a></li>
+      
+    </ul>
+    </nav>
+    </div>
+    <hr/>
+    <div class="container">
+
+
+<div class="article-meta">
+  <h1><span class="title">ALLES! CTF 2020 Writeup: Pyjail ATricks</span></h1>
+  
+  <h4 class="date"><span title="Publishing date." style="color: #000">September 6, 2020</span> - <span title="Date of the last major modification to this page." style="color: #000">September 6, 2020</spn></h4>
+  
+</div>
+
+<main>
+  <h1 id="description">Description</h1>
+<p>Category: Misc</p>
+<p>Difficulty: Easy</p>
+<p>Author: explo1t</p>
+<p>Description: Run the secret function you must! Hrrmmm. A flag maybe you will get.</p>
+<h1 id="overview">Overview</h1>
+<p>This challenge takes place in a remote restricted Python shell a.k.a. a Python jail. Usually the goal is to escape the jail, i.e. to shell out and find the flag in the filesystem.</p>
+<p>But this challenge description says that one <em>may</em> get a flag by running a secret function inside the jail. It turns out that another challenge called <strong>Pyjail Escape</strong> takes place inside this same jail, and its goal is to escape. So one can say this challenge is a bit easier than an actual jail escape.</p>
+<h1 id="reconnaissance">Reconnaissance</h1>
+<p>After connecting to the challenge server, there is the following Python shell:</p>
+<div class="highlight"><pre style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python">The flag <span style="color:#00f">is</span> stored super secure <span style="color:#00f">in</span> the function ALLES <span style="">!</span>
+&gt;&gt;&gt; a =
+</code></pre></div><p>So the secret function name is <code>ALLES</code>. Call it:</p>
+<div class="highlight"><pre style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python">a = ALLES()
+name <span style="color:#a31515">&#39;alles&#39;</span> <span style="color:#00f">is</span> <span style="color:#00f">not</span> defined
+</code></pre></div><p>The input characters are converted to lowercase. At this point it&rsquo;s a good idea to try to find other restrictions of this jail.</p>
+<h2 id="character-set">Character set</h2>
+<p>Some characters are prohibited:</p>
+<div class="highlight"><pre style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python">&gt;&gt;&gt; a = w
+w
+Denied
+</code></pre></div><p>But others are OK:</p>
+<div class="highlight"><pre style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python">&gt;&gt;&gt; a = e
+name <span style="color:#a31515">&#39;e&#39;</span> <span style="color:#00f">is</span> <span style="color:#00f">not</span> defined
+</code></pre></div><p>There are 95 printable ASCII characters, so it doesn&rsquo;t take long to try all of them. List of all allowed characters:</p>
+<div class="highlight"><pre style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python">[<span style="color:#a31515">&#34;1&#34;</span>, <span style="color:#a31515">&#34;2&#34;</span>, <span style="color:#a31515">&#34;3&#34;</span>, <span style="color:#a31515">&#34;7&#34;</span>, <span style="color:#a31515">&#34;9&#34;</span>, <span style="color:#a31515">&#34;0&#34;</span>, <span style="color:#a31515">&#34;</span><span style="color:#a31515">\&#34;</span><span style="color:#a31515">&#34;</span>, <span style="color:#a31515">&#34;(&#34;</span>, <span style="color:#a31515">&#34;)&#34;</span>, <span style="color:#a31515">&#34;&#39;&#34;</span>, <span style="color:#a31515">&#34;+&#34;</span>, <span style="color:#a31515">&#34;.&#34;</span>, <span style="color:#a31515">&#34;a&#34;</span>, <span style="color:#a31515">&#34;c&#34;</span>, <span style="color:#a31515">&#34;d&#34;</span>, <span style="color:#a31515">&#34;e&#34;</span>, <span style="color:#a31515">&#34;g&#34;</span>, <span style="color:#a31515">&#34;i&#34;</span>, <span style="color:#a31515">&#34;l&#34;</span>, <span style="color:#a31515">&#34;n&#34;</span>, <span style="color:#a31515">&#34;o&#34;</span>, <span style="color:#a31515">&#34;p&#34;</span>, <span style="color:#a31515">&#34;r&#34;</span>, <span style="color:#a31515">&#34;s&#34;</span>, <span style="color:#a31515">&#34;t&#34;</span>, <span style="color:#a31515">&#34;v&#34;</span>, <span style="color:#a31515">&#34;[&#34;</span>, <span style="color:#a31515">&#34;]&#34;</span>, <span style="color:#a31515">&#34;_&#34;</span>]
+</code></pre></div><p>Uppercase counterparts of allowed lowercase characters are not prohibited, but are converted to lowercase.</p>
+<h2 id="built-ins">Built-ins</h2>
+<p>Lots of built-in functions are removed:</p>
+<div class="highlight"><pre style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python">&gt;&gt;&gt; a = ord()
+name <span style="color:#a31515">&#39;ord&#39;</span> <span style="color:#00f">is</span> <span style="color:#00f">not</span> defined
+</code></pre></div><p>At this point calling <code>__builtins__</code> to see which functions weren&rsquo;t removed is not possible (<code>&quot;__builtins__&quot;</code> contains prohibited characters <code>'b'</code> and <code>'u'</code> ). Using <a href="https://docs.python.org/3/library/functions.html">Built-in Functions table</a> it is possible to manually check that the only readily available built-ins are: <code>['repr', 'str', 'print', 'eval', 'all']</code>. There might be others, but it is not possible to check at this point because of the character set restrictions.</p>
+<h2 id="using-eval">Using eval()</h2>
+<p>Out of that list, <code>eval</code> immediately catches attention. <code>eval</code> is used to evaluate a string as a Python expression and return the result.</p>
+<p>Since it is not possible to input uppercase letters directly to get the function <code>ALLES</code>, there is another way which uses <code>eval</code>:</p>
+<p>This works locally:</p>
+<div class="highlight"><pre style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python">&gt;&gt;&gt; <span style="color:#00f">def</span> ALLES(): ...
+...
+&gt;&gt;&gt; eval(eval(<span style="color:#a31515">&#34;</span><span style="color:#a31515">\&#34;</span><span style="color:#a31515">alles</span><span style="color:#a31515">\&#34;</span><span style="color:#a31515">.upper()&#34;</span>))
+&lt;function ALLES at 0x105725a60&gt;
+</code></pre></div><p>Unfortunately this wouldn&rsquo;t work inside the jail since <code>'upper'</code> contains forbidden characters.</p>
+<p>One way to go around this restriction is by finding the string <code>'upper'</code> in the list of all attributes and methods of <code>str</code> type.</p>
+<div class="highlight"><pre style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python">&gt;&gt;&gt; a = <span style="color:#00f">print</span>(<span style="color:#a31515">&#34;&#34;</span>.__dir__())
+[<span style="color:#a31515">&#39;__repr__&#39;</span>, <span style="color:#a31515">&#39;__hash__&#39;</span>, <span style="color:#a31515">&#39;__str__&#39;</span>, <span style="color:#a31515">&#39;__getattribute__&#39;</span>, <span style="color:#a31515">&#39;__lt__&#39;</span>, <span style="color:#a31515">&#39;__le__&#39;</span>, <span style="color:#a31515">&#39;__eq__&#39;</span>, <span style="color:#a31515">&#39;__ne__&#39;</span>, <span style="color:#a31515">&#39;__gt__&#39;</span>, <span style="color:#a31515">&#39;__ge__&#39;</span>, <span style="color:#a31515">&#39;__iter__&#39;</span>, <span style="color:#a31515">&#39;__mod__&#39;</span>, <span style="color:#a31515">&#39;__rmod__&#39;</span>, <span style="color:#a31515">&#39;__len__&#39;</span>, <span style="color:#a31515">&#39;__getitem__&#39;</span>, <span style="color:#a31515">&#39;__add__&#39;</span>, <span style="color:#a31515">&#39;__mul__&#39;</span>, <span style="color:#a31515">&#39;__rmul__&#39;</span>, <span style="color:#a31515">&#39;__contains__&#39;</span>, <span style="color:#a31515">&#39;__new__&#39;</span>, <span style="color:#a31515">&#39;encode&#39;</span>, <span style="color:#a31515">&#39;replace&#39;</span>, <span style="color:#a31515">&#39;split&#39;</span>, <span style="color:#a31515">&#39;rsplit&#39;</span>, <span style="color:#a31515">&#39;join&#39;</span>, <span style="color:#a31515">&#39;capitalize&#39;</span>, <span style="color:#a31515">&#39;casefold&#39;</span>, <span style="color:#a31515">&#39;title&#39;</span>, <span style="color:#a31515">&#39;center&#39;</span>, <span style="color:#a31515">&#39;count&#39;</span>, <span style="color:#a31515">&#39;expandtabs&#39;</span>, <span style="color:#a31515">&#39;find&#39;</span>, <span style="color:#a31515">&#39;partition&#39;</span>, <span style="color:#a31515">&#39;index&#39;</span>, <span style="color:#a31515">&#39;ljust&#39;</span>, <span style="color:#a31515">&#39;lower&#39;</span>, <span style="color:#a31515">&#39;lstrip&#39;</span>, <span style="color:#a31515">&#39;rfind&#39;</span>, <span style="color:#a31515">&#39;rindex&#39;</span>, <span style="color:#a31515">&#39;rjust&#39;</span>, <span style="color:#a31515">&#39;rstrip&#39;</span>, <span style="color:#a31515">&#39;rpartition&#39;</span>, <span style="color:#a31515">&#39;splitlines&#39;</span>, <span style="color:#a31515">&#39;strip&#39;</span>, <span style="color:#a31515">&#39;swapcase&#39;</span>, <span style="color:#a31515">&#39;translate&#39;</span>, <span style="color:#a31515">&#39;upper&#39;</span>, <span style="color:#a31515">&#39;startswith&#39;</span>, <span style="color:#a31515">&#39;endswith&#39;</span>, <span style="color:#a31515">&#39;islower&#39;</span>, <span style="color:#a31515">&#39;isupper&#39;</span>, <span style="color:#a31515">&#39;istitle&#39;</span>, <span style="color:#a31515">&#39;isspace&#39;</span>, <span style="color:#a31515">&#39;isdecimal&#39;</span>, <span style="color:#a31515">&#39;isdigit&#39;</span>, <span style="color:#a31515">&#39;isnumeric&#39;</span>, <span style="color:#a31515">&#39;isalpha&#39;</span>, <span style="color:#a31515">&#39;isalnum&#39;</span>, <span style="color:#a31515">&#39;isidentifier&#39;</span>, <span style="color:#a31515">&#39;isprintable&#39;</span>, <span style="color:#a31515">&#39;zfill&#39;</span>, <span style="color:#a31515">&#39;format&#39;</span>, <span style="color:#a31515">&#39;format_map&#39;</span>, <span style="color:#a31515">&#39;__format__&#39;</span>, <span style="color:#a31515">&#39;maketrans&#39;</span>, <span style="color:#a31515">&#39;__sizeof__&#39;</span>, <span style="color:#a31515">&#39;__getnewargs__&#39;</span>, <span style="color:#a31515">&#39;__doc__&#39;</span>, <span style="color:#a31515">&#39;__setattr__&#39;</span>, <span style="color:#a31515">&#39;__delattr__&#39;</span>, <span style="color:#a31515">&#39;__init__&#39;</span>, <span style="color:#a31515">&#39;__reduce_ex__&#39;</span>, <span style="color:#a31515">&#39;__reduce__&#39;</span>, <span style="color:#a31515">&#39;__subclasshook__&#39;</span>, <span style="color:#a31515">&#39;__init_subclass__&#39;</span>, <span style="color:#a31515">&#39;__dir__&#39;</span>, <span style="color:#a31515">&#39;__class__&#39;</span>]
+&gt;&gt;&gt; a = <span style="color:#00f">print</span>(<span style="color:#a31515">&#34;&#34;</span>.__dir__()[20+20+2+2+2])
+upper
+</code></pre></div><p>The strange indexing is due to the restriction on the digits that can be used in the jail.</p>
+<p>Using this, it is finally possible obtain <code>ALLES</code> function object:</p>
+<div class="highlight"><pre style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python">&gt;&gt;&gt; a = eval(eval(<span style="color:#a31515">&#39;&#34;alles&#34;.&#39;</span>+<span style="color:#a31515">&#34;&#34;</span>.__dir__()[20+20+2+2+2]+<span style="color:#a31515">&#39;()&#39;</span>))
+&gt;&gt;&gt; a = <span style="color:#00f">print</span>(a)
+&lt;function ALLES at 0x7f13d1aa0378&gt;
+&gt;&gt;&gt; a = eval(eval(<span style="color:#a31515">&#39;&#34;alles&#34;.&#39;</span>+<span style="color:#a31515">&#34;&#34;</span>.__dir__()[20+20+2+2+2]+<span style="color:#a31515">&#39;()&#39;</span>))
+&gt;&gt;&gt; a = <span style="color:#00f">print</span>(a())
+No flag <span style="color:#00f">for</span> you<span style="">!</span>
+</code></pre></div><p>There&rsquo;s more work to be done&hellip;</p>
+<h1 id="examining-alles__code__">Examining ALLES.__code__</h1>
+<p><code>ALLES</code> doesn&rsquo;t give away the flag when called with no arguments. One way to figure out how <code>ALLES</code> works and how to get the flag is to try passing different arguments to the function and observe its behaviour.</p>
+<p>Another way is to look at the <code>code</code> object:</p>
+<div class="highlight"><pre style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python">&gt;&gt;&gt; a = eval(eval(<span style="color:#a31515">&#39;&#34;alles&#34;.&#39;</span>+<span style="color:#a31515">&#34;&#34;</span>.__dir__()[20+20+2+2+2]+<span style="color:#a31515">&#39;()&#39;</span>))
+&gt;&gt;&gt; a = <span style="color:#00f">print</span>(a.__code__)
+&lt;code object ALLES at 0x7f13d1b0f0c0, file <span style="color:#a31515">&#34;./pyjail.py&#34;</span>, line 12&gt;
+&gt;&gt;&gt; a = eval(eval(<span style="color:#a31515">&#39;&#34;alles&#34;.&#39;</span>+<span style="color:#a31515">&#34;&#34;</span>.__dir__()[20+20+2+2+2]+<span style="color:#a31515">&#39;()&#39;</span>))
+&gt;&gt;&gt; a = <span style="color:#00f">print</span>(a.__code__.__dir__())
+[<span style="color:#a31515">&#39;__repr__&#39;</span>, <span style="color:#a31515">&#39;__hash__&#39;</span>, <span style="color:#a31515">&#39;__getattribute__&#39;</span>, <span style="color:#a31515">&#39;__lt__&#39;</span>, <span style="color:#a31515">&#39;__le__&#39;</span>, <span style="color:#a31515">&#39;__eq__&#39;</span>, <span style="color:#a31515">&#39;__ne__&#39;</span>, <span style="color:#a31515">&#39;__gt__&#39;</span>, <span style="color:#a31515">&#39;__ge__&#39;</span>, <span style="color:#a31515">&#39;__new__&#39;</span>, <span style="color:#a31515">&#39;__sizeof__&#39;</span>, <span style="color:#a31515">&#39;co_argcount&#39;</span>, <span style="color:#a31515">&#39;co_kwonlyargcount&#39;</span>, <span style="color:#a31515">&#39;co_nlocals&#39;</span>, <span style="color:#a31515">&#39;co_stacksize&#39;</span>, <span style="color:#a31515">&#39;co_flags&#39;</span>, <span style="color:#a31515">&#39;co_code&#39;</span>, <span style="color:#a31515">&#39;co_consts&#39;</span>, <span style="color:#a31515">&#39;co_names&#39;</span>, <span style="color:#a31515">&#39;co_varnames&#39;</span>, <span style="color:#a31515">&#39;co_freevars&#39;</span>, <span style="color:#a31515">&#39;co_cellvars&#39;</span>, <span style="color:#a31515">&#39;co_filename&#39;</span>, <span style="color:#a31515">&#39;co_name&#39;</span>, <span style="color:#a31515">&#39;co_firstlineno&#39;</span>, <span style="color:#a31515">&#39;co_lnotab&#39;</span>, <span style="color:#a31515">&#39;__doc__&#39;</span>, <span style="color:#a31515">&#39;__str__&#39;</span>, <span style="color:#a31515">&#39;__setattr__&#39;</span>, <span style="color:#a31515">&#39;__delattr__&#39;</span>, <span style="color:#a31515">&#39;__init__&#39;</span>, <span style="color:#a31515">&#39;__reduce_ex__&#39;</span>, <span style="color:#a31515">&#39;__reduce__&#39;</span>, <span style="color:#a31515">&#39;__subclasshook__&#39;</span>, <span style="color:#a31515">&#39;__init_subclass__&#39;</span>, <span style="color:#a31515">&#39;__format__&#39;</span>, <span style="color:#a31515">&#39;__dir__&#39;</span>, <span style="color:#a31515">&#39;__class__&#39;</span>]
+</code></pre></div><p>There are lots of attributes that are useful in reverse engineering a Python function.</p>
+<h2 id="constants">Constants</h2>
+<p>This is definitely the first attribute to check. A naive implementation of <code>ALLES</code> would store the flag as a string inside the function. This means the string would be stored as a constant in the function bytecode.</p>
+<h3 id="definition">Definition</h3>
+<p><code>co_consts</code> - tuple of constants used in the bytecode (see documentation of <a href="https://docs.python.org/3/library/inspect.html">inspect</a> for reference)</p>
+<h3 id="how-to-get">How to get</h3>
+<div class="highlight"><pre style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python">&gt;&gt;&gt; a = eval(eval(<span style="color:#a31515">&#39;&#34;alles&#34;.&#39;</span>+<span style="color:#a31515">&#34;&#34;</span>.__dir__()[20+20+2+2+2]+<span style="color:#a31515">&#39;()&#39;</span>))
+&gt;&gt;&gt; a = <span style="color:#00f">print</span>(a.__code__.co_consts)
+(None, <span style="color:#a31515">&#39;p</span><span style="color:#a31515">\x7f\x7f</span><span style="color:#a31515">rbH</span><span style="color:#a31515">\x00</span><span style="color:#a31515">DR</span><span style="color:#a31515">\x07</span><span style="color:#a31515">CRUlJ</span><span style="color:#a31515">\x07</span><span style="color:#a31515">DlRe</span><span style="color:#a31515">\x02</span><span style="color:#a31515">N&#39;</span>, <span style="color:#a31515">&#39;No flag for you!&#39;</span>)
+</code></pre></div><p>The string <code>'p\x7f\x7frbH\x00DR\x07CRUlJ\x07DlRe\x02N'</code> is not the flag format is <code>ALLES{...}</code>.</p>
+<h2 id="arguments">Arguments</h2>
+<h3 id="definition-1">Definition</h3>
+<p><code>co_varnames</code>- tuple of names of arguments and local variables</p>
+<h3 id="how-to-get-1">How to get</h3>
+<div class="highlight"><pre style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python">&gt;&gt;&gt; a = eval(eval(<span style="color:#a31515">&#39;&#34;alles&#34;.&#39;</span>+<span style="color:#a31515">&#34;&#34;</span>.__dir__()[20+20+2+2+2]+<span style="color:#a31515">&#39;()&#39;</span>))
+&gt;&gt;&gt; a = <span style="color:#00f">print</span>(eval(<span style="color:#a31515">&#34;a.__code__.&#34;</span>+a.__code__.__dir__()[19]))
+(<span style="color:#a31515">&#39;flag&#39;</span>,)
+</code></pre></div><h4 id="explanation">Explanation</h4>
+<p><code>a.__code__.__dir__()[19]</code> is <code>&quot;co_varnames&quot;</code>.</p>
+<h2 id="local-variables">Local variables</h2>
+<h3 id="definition-2">Definition</h3>
+<p><code>co_names</code> - tuple of names of global variables</p>
+<h3 id="how-to-get-2">How to get</h3>
+<div class="highlight"><pre style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python">&gt;&gt;&gt; a = eval(eval(<span style="color:#a31515">&#39;&#34;alles&#34;.&#39;</span>+<span style="color:#a31515">&#34;&#34;</span>.__dir__()[20+20+2+2+2]+<span style="color:#a31515">&#39;()&#39;</span>))
+&gt;&gt;&gt; a = <span style="color:#00f">print</span>(eval(<span style="color:#a31515">&#34;a.__code__.&#34;</span>+a.__code__.__dir__()[17+1]))
+(<span style="color:#a31515">&#39;string_xor&#39;</span>,)
+</code></pre></div><h4 id="explanation-1">Explanation</h4>
+<p><code>a.__code__.__dir__()[17+1]</code> is <code>&quot;co_names&quot;</code>.</p>
+<h2 id="bytecode">Bytecode</h2>
+<h3 id="definition-3">Definition</h3>
+<p><code>co_code</code> - string of raw compiled bytecode</p>
+<h3 id="how-to-get-3">How to get</h3>
+<div class="highlight"><pre style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python">&gt;&gt;&gt; a = eval(eval(<span style="color:#a31515">&#39;&#34;alles&#34;.&#39;</span>+<span style="color:#a31515">&#34;&#34;</span>.__dir__()[20+20+2+2+2]+<span style="color:#a31515">&#39;()&#39;</span>))
+&gt;&gt;&gt; a = <span style="color:#00f">print</span>(a.__code__.co_code)
+<span style="color:#a31515">b</span><span style="color:#a31515">&#39;|</span><span style="color:#a31515">\x00</span><span style="color:#a31515">r</span><span style="color:#a31515">\x0e</span><span style="color:#a31515">t</span><span style="color:#a31515">\x00</span><span style="color:#a31515">d</span><span style="color:#a31515">\x01</span><span style="color:#a31515">|</span><span style="color:#a31515">\x00\x83\x02</span><span style="color:#a31515">S</span><span style="color:#a31515">\x00</span><span style="color:#a31515">d</span><span style="color:#a31515">\x02</span><span style="color:#a31515">S</span><span style="color:#a31515">\x00</span><span style="color:#a31515">d</span><span style="color:#a31515">\x00</span><span style="color:#a31515">S</span><span style="color:#a31515">\x00</span><span style="color:#a31515">&#39;</span>
+</code></pre></div><h2 id="disassembly">Disassembly</h2>
+<p>The function bytecode can be disassembled using <a href="https://docs.python.org/3/library/dis.html#opcode-CALL_FUNCTION">dis</a> module locally:</p>
+<div class="highlight"><pre style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python">&gt;&gt;&gt; <span style="color:#00f">import</span> dis
+&gt;&gt;&gt; dis.dis(x=<span style="color:#a31515">b</span><span style="color:#a31515">&#39;|</span><span style="color:#a31515">\x00</span><span style="color:#a31515">r</span><span style="color:#a31515">\x0e</span><span style="color:#a31515">t</span><span style="color:#a31515">\x00</span><span style="color:#a31515">d</span><span style="color:#a31515">\x01</span><span style="color:#a31515">|</span><span style="color:#a31515">\x00\x83\x02</span><span style="color:#a31515">S</span><span style="color:#a31515">\x00</span><span style="color:#a31515">d</span><span style="color:#a31515">\x02</span><span style="color:#a31515">S</span><span style="color:#a31515">\x00</span><span style="color:#a31515">d</span><span style="color:#a31515">\x00</span><span style="color:#a31515">S</span><span style="color:#a31515">\x00</span><span style="color:#a31515">&#39;</span>)
+          0 LOAD_FAST                0 (0)
+          2 POP_JUMP_IF_FALSE       14
+          4 LOAD_GLOBAL              0 (0)
+          6 LOAD_CONST               1 (1)
+          8 LOAD_FAST                0 (0)
+         10 CALL_FUNCTION            2
+         12 RETURN_VALUE
+    &gt;&gt;   14 LOAD_CONST               2 (2)
+         16 RETURN_VALUE
+         18 LOAD_CONST               0 (0)
+         20 RETURN_VALUE
+</code></pre></div><h3 id="instruction-format">Instruction format</h3>
+<p>Python bytecode instruction disassembly follows this format: <code>offset opname arg (argval)</code></p>
+<p><code>offset</code> - start index of operation within bytecode sequence</p>
+<p><code>opname</code> - human readable name for operation</p>
+<p><code>arg</code> - numeric argument to operation (if any), otherwise None</p>
+<p><code>argval</code> - resolved arg value (if known), otherwise same as arg (<em>this is the case here</em>)</p>
+<p><code>&gt;&gt;</code> at offset 14 indicates that the instruction is a jump target.</p>
+<h3 id="disassembly-breakdown">Disassembly breakdown</h3>
+<table>
+<thead>
+<tr>
+<th>OP</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>0 LOAD_FAST 0 (0)</code></td>
+<td>Pushes a reference to the local <code>co_varnames[0] = 'flag'</code> onto the stack.</td>
+</tr>
+<tr>
+<td><code>2 POP_JUMP_IF_FALSE 14</code></td>
+<td>If TOS (top of stack) is false, sets the bytecode counter to target. TOS is popped.</td>
+</tr>
+<tr>
+<td><code>4 LOAD GLOBAL 0 (0)</code></td>
+<td>Loads the global named <code>co_names[0] = 'string_xor'</code> onto the stack.</td>
+</tr>
+<tr>
+<td><code>6 LOAD_CONST 1 (1)</code></td>
+<td>Pushes <code>co_consts[1] = 'p\x7f\x7frbH\x00DR\x07CRUlJ\x07DlRe\x02N'</code> onto the stack.</td>
+</tr>
+<tr>
+<td><code>8 LOAD_FAST 0 (0)</code></td>
+<td>Pushes a reference to the local <code>co_varnames[0] = 'flag'</code> onto the stack.</td>
+</tr>
+<tr>
+<td><code>10 CALL_FUNCTION 2</code></td>
+<td>Calls a callable object with positional arguments. <code>arg</code> indicates the number of positional arguments. The top of the stack contains positional arguments.</td>
+</tr>
+<tr>
+<td><code>12 RETURN_VALUE</code></td>
+<td>Returns with TOS to the caller of the function.</td>
+</tr>
+<tr>
+<td><code>&gt;&gt; 14 LOAD_CONST 2 (2)</code></td>
+<td>Pushes <code>co_consts[2] = 'No flag for you!'</code> onto the stack.</td>
+</tr>
+<tr>
+<td><code>16 RETURN_VALUE</code></td>
+<td>Returns with TOS to the caller of the function.</td>
+</tr>
+<tr>
+<td><code>18 LOAD_CONST 0 (0)</code></td>
+<td>Pushes <code>co_consts[0] = None</code> onto the stack.</td>
+</tr>
+<tr>
+<td><code>20 RETURN_VALUE</code></td>
+<td>Returns with TOS to the caller of the function.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="decompilation">Decompilation</h3>
+<p>The disassembly can be decompiled to this Python source code:</p>
+<div class="highlight"><pre style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python"><span style="color:#00f">def</span> string_xor(x, y): ...
+
+<span style="color:#00f">def</span> ALLES(flag):
+    <span style="color:#00f">if</span> flag:
+        <span style="color:#00f">return</span> string_xor(<span style="color:#a31515">&#39;p</span><span style="color:#a31515">\x7f\x7f</span><span style="color:#a31515">rbH</span><span style="color:#a31515">\x00</span><span style="color:#a31515">DR</span><span style="color:#a31515">\x07</span><span style="color:#a31515">CRUlJ</span><span style="color:#a31515">\x07</span><span style="color:#a31515">DlRe</span><span style="color:#a31515">\x02</span><span style="color:#a31515">N&#39;</span>, flag)
+    <span style="color:#00f">else</span>:
+        <span style="color:#00f">return</span> <span style="color:#a31515">&#39;No flag for you!&#39;</span>
+    <span style="color:#00f">return</span>
+        
+</code></pre></div><h3 id="sanity-check">Sanity check</h3>
+<p>Now that the dependence between the input <code>flag</code> and the output of <code>ALLES</code> is clearer. It&rsquo;s best to do a sanity check.</p>
+<p><code>flag</code> is falsy:</p>
+<div class="highlight"><pre style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python">&gt;&gt;&gt; a = eval(eval(<span style="color:#a31515">&#39;&#34;alles&#34;.&#39;</span>+<span style="color:#a31515">&#34;&#34;</span>.__dir__()[20+20+2+2+2]+<span style="color:#a31515">&#39;()&#39;</span>))
+&gt;&gt;&gt; a = <span style="color:#00f">print</span>(a())
+No flag <span style="color:#00f">for</span> you<span style="">!</span>
+</code></pre></div><p><code>flag</code> is truthy:</p>
+<div class="highlight"><pre style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python">&gt;&gt;&gt; a = eval(eval(<span style="color:#a31515">&#39;&#34;alles&#34;.&#39;</span>+<span style="color:#a31515">&#34;&#34;</span>.__dir__()[20+20+2+2+2]+<span style="color:#a31515">&#39;()&#39;</span>))
+&gt;&gt;&gt; a = <span style="color:#00f">print</span>(a(<span style="color:#a31515">&#34;0000&#34;</span>))
+@OOB
+</code></pre></div><p>It is now clear that <code>string_xor</code> a string of the same length as the input to <code>ALLES</code>.</p>
+<h3 id="string_xor-decompilation">string_xor decompilation</h3>
+<p><code>string_xor</code> is a global function so it is possible to get its code object and disassemble it.</p>
+<p>Instead, given that <code>string_xor</code> has a pretty descriptive name, it might be a better idea to save some time and guess how the function works by observing its behavior.</p>
+<p>Passing an <code>int</code>:</p>
+<div class="highlight"><pre style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python">&gt;&gt;&gt; a = eval(eval(<span style="color:#a31515">&#39;&#34;alles&#34;.&#39;</span>+<span style="color:#a31515">&#34;&#34;</span>.__dir__()[20+20+2+2+2]+<span style="color:#a31515">&#39;()&#39;</span>))
+&gt;&gt;&gt; a = <span style="color:#00f">print</span>(a(1))
+zip argument <span style="color:#008000">#2 must support iteration</span>
+</code></pre></div><p>Passing a <code>list</code>:</p>
+<div class="highlight"><pre style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python">&gt;&gt;&gt; a = eval(eval(<span style="color:#a31515">&#39;&#34;alles&#34;.&#39;</span>+<span style="color:#a31515">&#34;&#34;</span>.__dir__()[20+20+2+2+2]+<span style="color:#a31515">&#39;()&#39;</span>))
+&gt;&gt;&gt; a = <span style="color:#00f">print</span>(a([1]))
+ord() expected string of length 1, but int found
+</code></pre></div><p>Looks like the <code>string_xor(x, y)</code> accepts string inputs. It converts each character of <code>x</code> and <code>y</code>
+using <code>ord()</code> to an <code>int</code>, XORs them together, passes the result to <code>chr()</code> and uses that to construct an output string.</p>
+<p>Possible decompilation:</p>
+<div class="highlight"><pre style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python"><span style="color:#00f">def</span> string_xor(x, y):
+    ret = <span style="color:#a31515">&#39;&#39;</span>
+    <span style="color:#00f">for</span> i, j <span style="color:#00f">in</span> zip(x, y):
+        ret += chr(ord(i) ^ ord(j))
+    <span style="color:#00f">return</span> ret
+</code></pre></div><h3 id="another-sanity-check">Another sanity check</h3>
+<p>Trying this locally:</p>
+<div class="highlight"><pre style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python">&gt;&gt;&gt; <span style="color:#00f">def</span> string_xor(x, y):
+...     ret = <span style="color:#a31515">&#39;&#39;</span>
+...     <span style="color:#00f">for</span> i, j <span style="color:#00f">in</span> zip(x, y):
+...         ret += chr(ord(i) ^ ord(j))
+...     <span style="color:#00f">return</span> ret
+...
+&gt;&gt;&gt; <span style="color:#00f">def</span> ALLES(flag):
+...     <span style="color:#00f">if</span> flag:
+...         <span style="color:#00f">return</span> string_xor(<span style="color:#a31515">&#39;p</span><span style="color:#a31515">\x7f\x7f</span><span style="color:#a31515">rbH</span><span style="color:#a31515">\x00</span><span style="color:#a31515">DR</span><span style="color:#a31515">\x07</span><span style="color:#a31515">CRUlJ</span><span style="color:#a31515">\x07</span><span style="color:#a31515">DlRe</span><span style="color:#a31515">\x02</span><span style="color:#a31515">N&#39;</span>, flag)
+...     <span style="color:#00f">else</span>:
+...         <span style="color:#00f">return</span> <span style="color:#a31515">&#39;No flag for you!&#39;</span>
+...     <span style="color:#00f">return</span>
+...
+&gt;&gt;&gt; ALLES(<span style="color:#a31515">&#39;0000&#39;</span>)
+<span style="color:#a31515">&#39;@OOB&#39;</span>
+</code></pre></div><p>Same output as seen on the challenge server.</p>
+<h2 id="guessing-the-correct-flag">Guessing the correct flag</h2>
+<p>The flag format is known to be <code>ALLES{...}</code>.</p>
+<p>Therefore, the first 6 characters that need to be passed to <code>ALLES</code> to get the flag are the following (checking this locally):</p>
+<div class="highlight"><pre style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python">&gt;&gt;&gt; ALLES(<span style="color:#a31515">&#39;ALLES{&#39;</span>)
+<span style="color:#a31515">&#39;133713&#39;</span>
+</code></pre></div><p>It is now obvious Wh47 h42 70 8E d0NE 70 Ge7 7he fl4G&hellip;</p>
+<div class="highlight"><pre style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python">&gt;&gt;&gt; a = eval(eval(<span style="color:#a31515">&#39;&#34;alles&#34;.&#39;</span>+<span style="color:#a31515">&#34;&#34;</span>.__dir__()[20+20+2+2+2]+<span style="color:#a31515">&#39;()&#39;</span>))
+&gt;&gt;&gt; a = <span style="color:#00f">print</span>(a(<span style="color:#a31515">&#39;1337133713371337133713&#39;</span>))
+ALLES{3sc4ped_y0u_aR3}
+</code></pre></div>
+</main>
+
+  </div> 
+  <footer>
+  
+  <hr/>
+  <div class="container">
+  <a href="https://github.com/mmxmb">Github</a> / <a href="https://twitter.com/mmxxmb">Twitter</a> / <a href="https://www.linkedin.com/in/mmxmb/">LinkedIn</a> / <a href="/index.xml">RSS</a>
+  
+  </footer>
+  </body>
+  </div>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.11.1/dist/katex.min.css" integrity="sha384-zB1R0rpPzHqg7Kpt0Aljp8JPLqbXI3bhnPWROx27a9N0Ll6ZP/+DiW/UqRcLbRjq" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.11.1/dist/katex.min.js" integrity="sha384-y23I5Q6l+B6vatafAwxRu/0oK/79VlbSz7Q9aiSZUvyWYIYsd+qj+o24G5ZU2zJz" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.11.1/dist/contrib/auto-render.min.js" integrity="sha384-kWPLUVMOks5AQFrykwIup5lo0m3iMkkHrD0uJ4H5cjeGihAutqP0yW0J6dpFiVkI" crossorigin="anonymous"
+    onload="renderMathInElement(document.body);"></script>
+
+</html>
+

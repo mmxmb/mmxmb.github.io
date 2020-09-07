@@ -6,10 +6,24 @@
     <description>Recent content in Posts on Maxim Mikhaylov</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
-    <lastBuildDate>Thu, 09 Jul 2020 00:00:00 +0000</lastBuildDate>
+    <lastBuildDate>Sun, 06 Sep 2020 00:00:00 +0000</lastBuildDate>
     
 	<atom:link href="http://example.org/posts/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>ALLES! CTF 2020 Writeup: Pyjail ATricks</title>
+      <link>http://example.org/posts/alles-ctf-2020-writeup-pyjail-atricks/</link>
+      <pubDate>Sun, 06 Sep 2020 00:00:00 +0000</pubDate>
+      
+      <guid>http://example.org/posts/alles-ctf-2020-writeup-pyjail-atricks/</guid>
+      <description>Description Category: Misc
+Difficulty: Easy
+Author: explo1t
+Description: Run the secret function you must! Hrrmmm. A flag maybe you will get.
+Overview This challenge takes place in a remote restricted Python shell a.k.a. a Python jail. Usually the goal is to escape the jail, i.e. to shell out and find the flag in the filesystem.
+But this challenge description says that one may get a flag by running a secret function inside the jail.</description>
+    </item>
     
     <item>
       <title>Backing up Android with BorgBackup</title>
