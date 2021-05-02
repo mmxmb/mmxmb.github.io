@@ -12,13 +12,13 @@
     <div class="container">
     <nav>
     <ul class="menu">
-      <li> <a href="/">Maxim Mikhaylov</a></li>
+      <li> <a href="/">Max Mikhaylov</a></li>
       
-      <li><a href="/tags/">Tags</a></li>
+      <li><a href="/about/">About</a></li>
       
       <li><a href="/contact/">Contact</a></li>
       
-      <li><a href="/about/">About</a></li>
+      <li><a href="/tags/">Tags</a></li>
       
     </ul>
     </nav>
@@ -207,7 +207,7 @@ all_cnn_model.load_weights(<span style="color:#a31515">&#39;weights/all_cnn.30-0
 nin_cnn_model.load_weights(<span style="color:#a31515">&#39;weights/nin_cnn.30-0.93.hdf5&#39;</span>)
 
 models = [conv_pool_cnn_model, all_cnn_model, nin_cnn_model]
-</code></pre></div><p>Ensemble model definition is very straightforward. It uses the same input layer thas is shared between all previous models. In the top layer, the ensemble computes the average of three models&rsquo; outputs by using <code>Average()</code> merge layer.</p>
+</code></pre></div><p>Ensemble model definition is very straightforward. It uses the same input layer thas is shared between all previous models. In the top layer, the ensemble computes the average of three models' outputs by using <code>Average()</code> merge layer.</p>
 <div class="highlight"><pre style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python"><span style="color:#00f">def</span> ensemble(models, model_input):
     
     outputs = [model.outputs[0] <span style="color:#00f">for</span> model <span style="color:#00f">in</span> models]
@@ -261,7 +261,7 @@ evaluate_error(pair_C_ensemble_model)
   
   <hr/>
   <div class="container">
-  <a href="https://github.com/mmxmb">Github</a> / <a href="https://twitter.com/mmxxmb">Twitter</a> / <a href="https://www.linkedin.com/in/mmxmb/">LinkedIn</a> / <a href="/index.xml">RSS</a>
+  <a href="https://github.com/mmxmb">Github</a> / <a href="/index.xml">RSS</a>
   
   </footer>
   </body>

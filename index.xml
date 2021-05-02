@@ -6,11 +6,7 @@
     <description>Recent content on Maxim Mikhaylov</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
-    <lastBuildDate>Sun, 06 Sep 2020 00:00:00 +0000</lastBuildDate>
-    
-	<atom:link href="http://example.org/index.xml" rel="self" type="application/rss+xml" />
-    
-    
+    <lastBuildDate>Sun, 06 Sep 2020 00:00:00 +0000</lastBuildDate><atom:link href="http://example.org/index.xml" rel="self" type="application/rss+xml" />
     <item>
       <title>ALLES! CTF 2020 Writeup: Pyjail ATricks</title>
       <link>http://example.org/posts/alles-ctf-2020-writeup-pyjail-atricks/</link>
@@ -70,19 +66,19 @@ The next one is even easier - only 12 distinct shapes:</description>
     <item>
       <title>About</title>
       <link>http://example.org/about/</link>
-      <pubDate>Wed, 31 Dec 1969 18:59:59 -0500</pubDate>
+      <pubDate>Thu, 01 Jan 1970 00:59:59 +0100</pubDate>
       
       <guid>http://example.org/about/</guid>
-      <description>.item-container{ margin: 20px 20px 0 0; width:100%; overflow:hidden; } .item-thumb img { float: left; clear:left; width:50px; height:50px; } .item-title { float:left; margin-left:10px; } .dropdown { } .dropdown-content { display: none; position: absolute; z-index: 1; width:100%; margin: 0 auto; } .dropdown:hover .dropdown-content { display: block; max-height: 60%; max-width: 50%; } p { -webkit-hyphens: none; -moz-hyphens: none; -ms-hyphens: none; hyphens: none; }   I am Max, a recent Computer Engineering graduate.</description>
+      <description> .item-container{ margin: 20px 20px 0 0; width:100%; overflow:hidden; } .item-thumb img { float: left; clear:left; width:50px; height:50px; } .item-title { float:left; margin-left:10px; } .dropdown { } .dropdown-content { display: none; position: absolute; z-index: 1; width:100%; margin: 0 auto; } .dropdown:hover .dropdown-content { display: block; max-height: 60%; max-width: 50%; } p { -webkit-hyphens: none; -moz-hyphens: none; -ms-hyphens: none; hyphens: none; text-align: center; }   😌   </description>
     </item>
     
     <item>
       <title>Contact</title>
       <link>http://example.org/contact/</link>
-      <pubDate>Wed, 31 Dec 1969 18:59:59 -0500</pubDate>
+      <pubDate>Thu, 01 Jan 1970 00:59:59 +0100</pubDate>
       
       <guid>http://example.org/contact/</guid>
-      <description>The best way to get in touch with me is via email: max at this domain.
+      <description>The best way to get in touch with me is via email: max at this domain name.
 For end-to-end encrypted communication, provide me with your Signal or Matrix contact information.</description>
     </item>
     

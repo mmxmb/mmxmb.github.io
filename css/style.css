@@ -21,13 +21,10 @@ body a:visited {
 }
 
 .posts li {
-  list-style-type: none;
   margin-bottom: 15px;
+  list-style-type: disc;
 }
 
-.posts li:before {
-    content: "𓇳 ";
-}
 
 /* header and footer areas */
 .menu { 

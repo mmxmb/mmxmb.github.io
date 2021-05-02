@@ -12,13 +12,13 @@
     <div class="container">
     <nav>
     <ul class="menu">
-      <li> <a href="/">Maxim Mikhaylov</a></li>
+      <li> <a href="/">Max Mikhaylov</a></li>
       
-      <li><a href="/tags/">Tags</a></li>
+      <li><a href="/about/">About</a></li>
       
       <li><a href="/contact/">Contact</a></li>
       
-      <li><a href="/about/">About</a></li>
+      <li><a href="/tags/">Tags</a></li>
       
     </ul>
     </nav>
@@ -170,7 +170,7 @@ Y_train = utils.to_categorical(Y_train, num_classes=12) <span style="color:#0080
 <p><code>fill_mode='constant</code> - when an image is rotated or shifted, there will be data points outside of boundaries of an input. They are going to be filled with zeroes (background color)</p>
 </li>
 <li>
-<p><code>ImageDataGenerator</code> generates augmented image data in real time during training and can do so indefinitely. It is useful to have a rough idea of what kind of augmented data will be supplied to the CNN. <code>ImageDataGenerator</code>'s <code>flow()</code> method returns <code>NumpyArrayIterator</code> which can be used to generate and view a sample of augmented image data.</p>
+<p><code>ImageDataGenerator</code> generates augmented image data in real time during training and can do so indefinitely. It is useful to have a rough idea of what kind of augmented data will be supplied to the CNN. <code>ImageDataGenerator</code>&rsquo;s <code>flow()</code> method returns <code>NumpyArrayIterator</code> which can be used to generate and view a sample of augmented image data.</p>
 </li>
 </ul>
 <div class="highlight"><pre style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python">datagen_iter = datagen.flow(X_train, batch_size=10)
@@ -371,7 +371,7 @@ plt.imshow(test_captcha)
   
   <hr/>
   <div class="container">
-  <a href="https://github.com/mmxmb">Github</a> / <a href="https://twitter.com/mmxxmb">Twitter</a> / <a href="https://www.linkedin.com/in/mmxmb/">LinkedIn</a> / <a href="/index.xml">RSS</a>
+  <a href="https://github.com/mmxmb">Github</a> / <a href="/index.xml">RSS</a>
   
   </footer>
   </body>
