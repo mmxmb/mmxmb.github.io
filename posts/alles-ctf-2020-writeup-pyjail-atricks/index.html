@@ -77,27 +77,27 @@ name <span style="color:#a31515">&#39;ord&#39;</span> <span style="color:#00f">i
 &lt;function ALLES at 0x105725a60&gt;
 </code></pre></div><p>Unfortunately this wouldn&rsquo;t work inside the jail since <code>'upper'</code> contains forbidden characters.</p>
 <p>One way to go around this restriction is by finding the string <code>'upper'</code> in the list of all attributes and methods of <code>str</code> type.</p>
-<div class="highlight"><pre style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python">&gt;&gt;&gt; a = <span style="color:#00f">print</span>(<span style="color:#a31515">&#34;&#34;</span>.__dir__())
+<div class="highlight"><pre style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python">&gt;&gt;&gt; a = print(<span style="color:#a31515">&#34;&#34;</span>.__dir__())
 [<span style="color:#a31515">&#39;__repr__&#39;</span>, <span style="color:#a31515">&#39;__hash__&#39;</span>, <span style="color:#a31515">&#39;__str__&#39;</span>, <span style="color:#a31515">&#39;__getattribute__&#39;</span>, <span style="color:#a31515">&#39;__lt__&#39;</span>, <span style="color:#a31515">&#39;__le__&#39;</span>, <span style="color:#a31515">&#39;__eq__&#39;</span>, <span style="color:#a31515">&#39;__ne__&#39;</span>, <span style="color:#a31515">&#39;__gt__&#39;</span>, <span style="color:#a31515">&#39;__ge__&#39;</span>, <span style="color:#a31515">&#39;__iter__&#39;</span>, <span style="color:#a31515">&#39;__mod__&#39;</span>, <span style="color:#a31515">&#39;__rmod__&#39;</span>, <span style="color:#a31515">&#39;__len__&#39;</span>, <span style="color:#a31515">&#39;__getitem__&#39;</span>, <span style="color:#a31515">&#39;__add__&#39;</span>, <span style="color:#a31515">&#39;__mul__&#39;</span>, <span style="color:#a31515">&#39;__rmul__&#39;</span>, <span style="color:#a31515">&#39;__contains__&#39;</span>, <span style="color:#a31515">&#39;__new__&#39;</span>, <span style="color:#a31515">&#39;encode&#39;</span>, <span style="color:#a31515">&#39;replace&#39;</span>, <span style="color:#a31515">&#39;split&#39;</span>, <span style="color:#a31515">&#39;rsplit&#39;</span>, <span style="color:#a31515">&#39;join&#39;</span>, <span style="color:#a31515">&#39;capitalize&#39;</span>, <span style="color:#a31515">&#39;casefold&#39;</span>, <span style="color:#a31515">&#39;title&#39;</span>, <span style="color:#a31515">&#39;center&#39;</span>, <span style="color:#a31515">&#39;count&#39;</span>, <span style="color:#a31515">&#39;expandtabs&#39;</span>, <span style="color:#a31515">&#39;find&#39;</span>, <span style="color:#a31515">&#39;partition&#39;</span>, <span style="color:#a31515">&#39;index&#39;</span>, <span style="color:#a31515">&#39;ljust&#39;</span>, <span style="color:#a31515">&#39;lower&#39;</span>, <span style="color:#a31515">&#39;lstrip&#39;</span>, <span style="color:#a31515">&#39;rfind&#39;</span>, <span style="color:#a31515">&#39;rindex&#39;</span>, <span style="color:#a31515">&#39;rjust&#39;</span>, <span style="color:#a31515">&#39;rstrip&#39;</span>, <span style="color:#a31515">&#39;rpartition&#39;</span>, <span style="color:#a31515">&#39;splitlines&#39;</span>, <span style="color:#a31515">&#39;strip&#39;</span>, <span style="color:#a31515">&#39;swapcase&#39;</span>, <span style="color:#a31515">&#39;translate&#39;</span>, <span style="color:#a31515">&#39;upper&#39;</span>, <span style="color:#a31515">&#39;startswith&#39;</span>, <span style="color:#a31515">&#39;endswith&#39;</span>, <span style="color:#a31515">&#39;islower&#39;</span>, <span style="color:#a31515">&#39;isupper&#39;</span>, <span style="color:#a31515">&#39;istitle&#39;</span>, <span style="color:#a31515">&#39;isspace&#39;</span>, <span style="color:#a31515">&#39;isdecimal&#39;</span>, <span style="color:#a31515">&#39;isdigit&#39;</span>, <span style="color:#a31515">&#39;isnumeric&#39;</span>, <span style="color:#a31515">&#39;isalpha&#39;</span>, <span style="color:#a31515">&#39;isalnum&#39;</span>, <span style="color:#a31515">&#39;isidentifier&#39;</span>, <span style="color:#a31515">&#39;isprintable&#39;</span>, <span style="color:#a31515">&#39;zfill&#39;</span>, <span style="color:#a31515">&#39;format&#39;</span>, <span style="color:#a31515">&#39;format_map&#39;</span>, <span style="color:#a31515">&#39;__format__&#39;</span>, <span style="color:#a31515">&#39;maketrans&#39;</span>, <span style="color:#a31515">&#39;__sizeof__&#39;</span>, <span style="color:#a31515">&#39;__getnewargs__&#39;</span>, <span style="color:#a31515">&#39;__doc__&#39;</span>, <span style="color:#a31515">&#39;__setattr__&#39;</span>, <span style="color:#a31515">&#39;__delattr__&#39;</span>, <span style="color:#a31515">&#39;__init__&#39;</span>, <span style="color:#a31515">&#39;__reduce_ex__&#39;</span>, <span style="color:#a31515">&#39;__reduce__&#39;</span>, <span style="color:#a31515">&#39;__subclasshook__&#39;</span>, <span style="color:#a31515">&#39;__init_subclass__&#39;</span>, <span style="color:#a31515">&#39;__dir__&#39;</span>, <span style="color:#a31515">&#39;__class__&#39;</span>]
-&gt;&gt;&gt; a = <span style="color:#00f">print</span>(<span style="color:#a31515">&#34;&#34;</span>.__dir__()[20+20+2+2+2])
+&gt;&gt;&gt; a = print(<span style="color:#a31515">&#34;&#34;</span>.__dir__()[20+20+2+2+2])
 upper
 </code></pre></div><p>The strange indexing is due to the restriction on the digits that can be used in the jail.</p>
 <p>Using this, it is finally possible obtain <code>ALLES</code> function object:</p>
 <div class="highlight"><pre style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python">&gt;&gt;&gt; a = eval(eval(<span style="color:#a31515">&#39;&#34;alles&#34;.&#39;</span>+<span style="color:#a31515">&#34;&#34;</span>.__dir__()[20+20+2+2+2]+<span style="color:#a31515">&#39;()&#39;</span>))
-&gt;&gt;&gt; a = <span style="color:#00f">print</span>(a)
+&gt;&gt;&gt; a = print(a)
 &lt;function ALLES at 0x7f13d1aa0378&gt;
 &gt;&gt;&gt; a = eval(eval(<span style="color:#a31515">&#39;&#34;alles&#34;.&#39;</span>+<span style="color:#a31515">&#34;&#34;</span>.__dir__()[20+20+2+2+2]+<span style="color:#a31515">&#39;()&#39;</span>))
-&gt;&gt;&gt; a = <span style="color:#00f">print</span>(a())
+&gt;&gt;&gt; a = print(a())
 No flag <span style="color:#00f">for</span> you<span style="">!</span>
 </code></pre></div><p>There&rsquo;s more work to be done&hellip;</p>
 <h1 id="examining-alles__code__">Examining ALLES.__code__</h1>
 <p><code>ALLES</code> doesn&rsquo;t give away the flag when called with no arguments. One way to figure out how <code>ALLES</code> works and how to get the flag is to try passing different arguments to the function and observe its behaviour.</p>
 <p>Another way is to look at the <code>code</code> object:</p>
 <div class="highlight"><pre style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python">&gt;&gt;&gt; a = eval(eval(<span style="color:#a31515">&#39;&#34;alles&#34;.&#39;</span>+<span style="color:#a31515">&#34;&#34;</span>.__dir__()[20+20+2+2+2]+<span style="color:#a31515">&#39;()&#39;</span>))
-&gt;&gt;&gt; a = <span style="color:#00f">print</span>(a.__code__)
+&gt;&gt;&gt; a = print(a.__code__)
 &lt;code object ALLES at 0x7f13d1b0f0c0, file <span style="color:#a31515">&#34;./pyjail.py&#34;</span>, line 12&gt;
 &gt;&gt;&gt; a = eval(eval(<span style="color:#a31515">&#39;&#34;alles&#34;.&#39;</span>+<span style="color:#a31515">&#34;&#34;</span>.__dir__()[20+20+2+2+2]+<span style="color:#a31515">&#39;()&#39;</span>))
-&gt;&gt;&gt; a = <span style="color:#00f">print</span>(a.__code__.__dir__())
+&gt;&gt;&gt; a = print(a.__code__.__dir__())
 [<span style="color:#a31515">&#39;__repr__&#39;</span>, <span style="color:#a31515">&#39;__hash__&#39;</span>, <span style="color:#a31515">&#39;__getattribute__&#39;</span>, <span style="color:#a31515">&#39;__lt__&#39;</span>, <span style="color:#a31515">&#39;__le__&#39;</span>, <span style="color:#a31515">&#39;__eq__&#39;</span>, <span style="color:#a31515">&#39;__ne__&#39;</span>, <span style="color:#a31515">&#39;__gt__&#39;</span>, <span style="color:#a31515">&#39;__ge__&#39;</span>, <span style="color:#a31515">&#39;__new__&#39;</span>, <span style="color:#a31515">&#39;__sizeof__&#39;</span>, <span style="color:#a31515">&#39;co_argcount&#39;</span>, <span style="color:#a31515">&#39;co_kwonlyargcount&#39;</span>, <span style="color:#a31515">&#39;co_nlocals&#39;</span>, <span style="color:#a31515">&#39;co_stacksize&#39;</span>, <span style="color:#a31515">&#39;co_flags&#39;</span>, <span style="color:#a31515">&#39;co_code&#39;</span>, <span style="color:#a31515">&#39;co_consts&#39;</span>, <span style="color:#a31515">&#39;co_names&#39;</span>, <span style="color:#a31515">&#39;co_varnames&#39;</span>, <span style="color:#a31515">&#39;co_freevars&#39;</span>, <span style="color:#a31515">&#39;co_cellvars&#39;</span>, <span style="color:#a31515">&#39;co_filename&#39;</span>, <span style="color:#a31515">&#39;co_name&#39;</span>, <span style="color:#a31515">&#39;co_firstlineno&#39;</span>, <span style="color:#a31515">&#39;co_lnotab&#39;</span>, <span style="color:#a31515">&#39;__doc__&#39;</span>, <span style="color:#a31515">&#39;__str__&#39;</span>, <span style="color:#a31515">&#39;__setattr__&#39;</span>, <span style="color:#a31515">&#39;__delattr__&#39;</span>, <span style="color:#a31515">&#39;__init__&#39;</span>, <span style="color:#a31515">&#39;__reduce_ex__&#39;</span>, <span style="color:#a31515">&#39;__reduce__&#39;</span>, <span style="color:#a31515">&#39;__subclasshook__&#39;</span>, <span style="color:#a31515">&#39;__init_subclass__&#39;</span>, <span style="color:#a31515">&#39;__format__&#39;</span>, <span style="color:#a31515">&#39;__dir__&#39;</span>, <span style="color:#a31515">&#39;__class__&#39;</span>]
 </code></pre></div><p>There are lots of attributes that are useful in reverse engineering a Python function.</p>
 <h2 id="constants">Constants</h2>
@@ -106,15 +106,15 @@ No flag <span style="color:#00f">for</span> you<span style="">!</span>
 <p><code>co_consts</code> - tuple of constants used in the bytecode (see documentation of <a href="https://docs.python.org/3/library/inspect.html">inspect</a> for reference)</p>
 <h3 id="how-to-get">How to get</h3>
 <div class="highlight"><pre style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python">&gt;&gt;&gt; a = eval(eval(<span style="color:#a31515">&#39;&#34;alles&#34;.&#39;</span>+<span style="color:#a31515">&#34;&#34;</span>.__dir__()[20+20+2+2+2]+<span style="color:#a31515">&#39;()&#39;</span>))
-&gt;&gt;&gt; a = <span style="color:#00f">print</span>(a.__code__.co_consts)
-(None, <span style="color:#a31515">&#39;p</span><span style="color:#a31515">\x7f\x7f</span><span style="color:#a31515">rbH</span><span style="color:#a31515">\x00</span><span style="color:#a31515">DR</span><span style="color:#a31515">\x07</span><span style="color:#a31515">CRUlJ</span><span style="color:#a31515">\x07</span><span style="color:#a31515">DlRe</span><span style="color:#a31515">\x02</span><span style="color:#a31515">N&#39;</span>, <span style="color:#a31515">&#39;No flag for you!&#39;</span>)
+&gt;&gt;&gt; a = print(a.__code__.co_consts)
+(<span style="color:#00f">None</span>, <span style="color:#a31515">&#39;p</span><span style="color:#a31515">\x7f\x7f</span><span style="color:#a31515">rbH</span><span style="color:#a31515">\x00</span><span style="color:#a31515">DR</span><span style="color:#a31515">\x07</span><span style="color:#a31515">CRUlJ</span><span style="color:#a31515">\x07</span><span style="color:#a31515">DlRe</span><span style="color:#a31515">\x02</span><span style="color:#a31515">N&#39;</span>, <span style="color:#a31515">&#39;No flag for you!&#39;</span>)
 </code></pre></div><p>The string <code>'p\x7f\x7frbH\x00DR\x07CRUlJ\x07DlRe\x02N'</code> is not the flag format is <code>ALLES{...}</code>.</p>
 <h2 id="arguments">Arguments</h2>
 <h3 id="definition-1">Definition</h3>
 <p><code>co_varnames</code>- tuple of names of arguments and local variables</p>
 <h3 id="how-to-get-1">How to get</h3>
 <div class="highlight"><pre style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python">&gt;&gt;&gt; a = eval(eval(<span style="color:#a31515">&#39;&#34;alles&#34;.&#39;</span>+<span style="color:#a31515">&#34;&#34;</span>.__dir__()[20+20+2+2+2]+<span style="color:#a31515">&#39;()&#39;</span>))
-&gt;&gt;&gt; a = <span style="color:#00f">print</span>(eval(<span style="color:#a31515">&#34;a.__code__.&#34;</span>+a.__code__.__dir__()[19]))
+&gt;&gt;&gt; a = print(eval(<span style="color:#a31515">&#34;a.__code__.&#34;</span>+a.__code__.__dir__()[19]))
 (<span style="color:#a31515">&#39;flag&#39;</span>,)
 </code></pre></div><h4 id="explanation">Explanation</h4>
 <p><code>a.__code__.__dir__()[19]</code> is <code>&quot;co_varnames&quot;</code>.</p>
@@ -123,7 +123,7 @@ No flag <span style="color:#00f">for</span> you<span style="">!</span>
 <p><code>co_names</code> - tuple of names of global variables</p>
 <h3 id="how-to-get-2">How to get</h3>
 <div class="highlight"><pre style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python">&gt;&gt;&gt; a = eval(eval(<span style="color:#a31515">&#39;&#34;alles&#34;.&#39;</span>+<span style="color:#a31515">&#34;&#34;</span>.__dir__()[20+20+2+2+2]+<span style="color:#a31515">&#39;()&#39;</span>))
-&gt;&gt;&gt; a = <span style="color:#00f">print</span>(eval(<span style="color:#a31515">&#34;a.__code__.&#34;</span>+a.__code__.__dir__()[17+1]))
+&gt;&gt;&gt; a = print(eval(<span style="color:#a31515">&#34;a.__code__.&#34;</span>+a.__code__.__dir__()[17+1]))
 (<span style="color:#a31515">&#39;string_xor&#39;</span>,)
 </code></pre></div><h4 id="explanation-1">Explanation</h4>
 <p><code>a.__code__.__dir__()[17+1]</code> is <code>&quot;co_names&quot;</code>.</p>
@@ -132,7 +132,7 @@ No flag <span style="color:#00f">for</span> you<span style="">!</span>
 <p><code>co_code</code> - string of raw compiled bytecode</p>
 <h3 id="how-to-get-3">How to get</h3>
 <div class="highlight"><pre style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python">&gt;&gt;&gt; a = eval(eval(<span style="color:#a31515">&#39;&#34;alles&#34;.&#39;</span>+<span style="color:#a31515">&#34;&#34;</span>.__dir__()[20+20+2+2+2]+<span style="color:#a31515">&#39;()&#39;</span>))
-&gt;&gt;&gt; a = <span style="color:#00f">print</span>(a.__code__.co_code)
+&gt;&gt;&gt; a = print(a.__code__.co_code)
 <span style="color:#a31515">b</span><span style="color:#a31515">&#39;|</span><span style="color:#a31515">\x00</span><span style="color:#a31515">r</span><span style="color:#a31515">\x0e</span><span style="color:#a31515">t</span><span style="color:#a31515">\x00</span><span style="color:#a31515">d</span><span style="color:#a31515">\x01</span><span style="color:#a31515">|</span><span style="color:#a31515">\x00\x83\x02</span><span style="color:#a31515">S</span><span style="color:#a31515">\x00</span><span style="color:#a31515">d</span><span style="color:#a31515">\x02</span><span style="color:#a31515">S</span><span style="color:#a31515">\x00</span><span style="color:#a31515">d</span><span style="color:#a31515">\x00</span><span style="color:#a31515">S</span><span style="color:#a31515">\x00</span><span style="color:#a31515">&#39;</span>
 </code></pre></div><h2 id="disassembly">Disassembly</h2>
 <p>The function bytecode can be disassembled using <a href="https://docs.python.org/3/library/dis.html#opcode-CALL_FUNCTION">dis</a> module locally:</p>
@@ -226,11 +226,11 @@ No flag <span style="color:#00f">for</span> you<span style="">!</span>
 <p>Now that the dependence between the input <code>flag</code> and the output of <code>ALLES</code> is clearer. It&rsquo;s best to do a sanity check.</p>
 <p><code>flag</code> is falsy:</p>
 <div class="highlight"><pre style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python">&gt;&gt;&gt; a = eval(eval(<span style="color:#a31515">&#39;&#34;alles&#34;.&#39;</span>+<span style="color:#a31515">&#34;&#34;</span>.__dir__()[20+20+2+2+2]+<span style="color:#a31515">&#39;()&#39;</span>))
-&gt;&gt;&gt; a = <span style="color:#00f">print</span>(a())
+&gt;&gt;&gt; a = print(a())
 No flag <span style="color:#00f">for</span> you<span style="">!</span>
 </code></pre></div><p><code>flag</code> is truthy:</p>
 <div class="highlight"><pre style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python">&gt;&gt;&gt; a = eval(eval(<span style="color:#a31515">&#39;&#34;alles&#34;.&#39;</span>+<span style="color:#a31515">&#34;&#34;</span>.__dir__()[20+20+2+2+2]+<span style="color:#a31515">&#39;()&#39;</span>))
-&gt;&gt;&gt; a = <span style="color:#00f">print</span>(a(<span style="color:#a31515">&#34;0000&#34;</span>))
+&gt;&gt;&gt; a = print(a(<span style="color:#a31515">&#34;0000&#34;</span>))
 @OOB
 </code></pre></div><p>It is now clear that <code>string_xor</code> a string of the same length as the input to <code>ALLES</code>.</p>
 <h3 id="string_xor-decompilation">string_xor decompilation</h3>
@@ -238,11 +238,11 @@ No flag <span style="color:#00f">for</span> you<span style="">!</span>
 <p>Instead, given that <code>string_xor</code> has a pretty descriptive name, it might be a better idea to save some time and guess how the function works by observing its behavior.</p>
 <p>Passing an <code>int</code>:</p>
 <div class="highlight"><pre style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python">&gt;&gt;&gt; a = eval(eval(<span style="color:#a31515">&#39;&#34;alles&#34;.&#39;</span>+<span style="color:#a31515">&#34;&#34;</span>.__dir__()[20+20+2+2+2]+<span style="color:#a31515">&#39;()&#39;</span>))
-&gt;&gt;&gt; a = <span style="color:#00f">print</span>(a(1))
+&gt;&gt;&gt; a = print(a(1))
 zip argument <span style="color:#008000">#2 must support iteration</span>
 </code></pre></div><p>Passing a <code>list</code>:</p>
 <div class="highlight"><pre style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python">&gt;&gt;&gt; a = eval(eval(<span style="color:#a31515">&#39;&#34;alles&#34;.&#39;</span>+<span style="color:#a31515">&#34;&#34;</span>.__dir__()[20+20+2+2+2]+<span style="color:#a31515">&#39;()&#39;</span>))
-&gt;&gt;&gt; a = <span style="color:#00f">print</span>(a([1]))
+&gt;&gt;&gt; a = print(a([1]))
 ord() expected string of length 1, but int found
 </code></pre></div><p>Looks like the <code>string_xor(x, y)</code> accepts string inputs. It converts each character of <code>x</code> and <code>y</code>
 using <code>ord()</code> to an <code>int</code>, XORs them together, passes the result to <code>chr()</code> and uses that to construct an output string.</p>
@@ -277,7 +277,7 @@ using <code>ord()</code> to an <code>int</code>, XORs them together, passes the 
 <span style="color:#a31515">&#39;133713&#39;</span>
 </code></pre></div><p>It is now obvious Wh47 h42 70 8E d0NE 70 Ge7 7he fl4G&hellip;</p>
 <div class="highlight"><pre style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python">&gt;&gt;&gt; a = eval(eval(<span style="color:#a31515">&#39;&#34;alles&#34;.&#39;</span>+<span style="color:#a31515">&#34;&#34;</span>.__dir__()[20+20+2+2+2]+<span style="color:#a31515">&#39;()&#39;</span>))
-&gt;&gt;&gt; a = <span style="color:#00f">print</span>(a(<span style="color:#a31515">&#39;1337133713371337133713&#39;</span>))
+&gt;&gt;&gt; a = print(a(<span style="color:#a31515">&#39;1337133713371337133713&#39;</span>))
 ALLES{3sc4ped_y0u_aR3}
 </code></pre></div>
 </main>

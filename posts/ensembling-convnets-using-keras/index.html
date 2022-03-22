@@ -48,8 +48,7 @@
 <p>If you look at results of any big machine learning competition, you will most likely find that the top results are achieved by an ensemble of models rather than a single model. For instance, the top-scoring single model architecture at <a href="http://www.image-net.org/challenges/LSVRC/2015/results">ILSVRC2015</a> is on place 13. Places 1-12 are taken by various ensembles.</p>
 <p>I haven&rsquo;t seen a tutorial or documentation on how to use several neural networks in an ensemble, so I decided to share the way I do it. I will be using <a href="https://keras.io/">Keras</a>, specifically its <a href="https://keras.io/models/model/">Functional API</a>, to recreate three small CNNs (compared to ResNet50, Inception etc.) from relatively well-known papers. I will train each model separately on <a href="https://www.cs.toronto.edu/~kriz/cifar.html">CIFAR-10</a> training dataset. [<a href="https://www.cs.toronto.edu/~kriz/learning-features-2009-TR.pdf">3</a>] Then each model will be evaluated using the test set. After that, I will put all three models in an ensemble and evaluate it. It is expected that the ensemble will perform better on a test set that any single model in the ensemble separately.</p>
 <p>There are many different types of ensembles; stacking is one of them. It is one of the more general types and can theoretically represent any other ensemble technique. Stacking involves training a learning algorithm to combine the predictions of several other learning algorithms. [<a href="https://en.wikipedia.org/wiki/Ensemble_learning#Stacking">1</a>] For the sake of this example, I will use one of the simplest forms of Stacking, which involves taking an average of outputs of models in the ensemble. Since averaging doesn&rsquo;t take any parameters, there is no need to train this ensemble (only its models).</p>
-<figure>
-    <img src="/ensembling-convnets-using-keras/ensemble.png"/> <figcaption>
+<figure><img src="/ensembling-convnets-using-keras/ensemble.png"/><figcaption>
             <h4>Ensemble diagram</h4>
         </figcaption>
 </figure>
@@ -72,7 +71,7 @@ x_train = x_train / 255.
 x_test = x_test / 255.
 y_train = to_categorical(y_train, num_classes=10)
 </code></pre></div><p>The dataset consists of 60000 32x32 RGB images from 10 classes. 50000 images are used for training/validation and the other 10000 for testing.</p>
-<div class="highlight"><pre style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python"><span style="color:#00f">print</span>(<span style="color:#a31515">&#39;x_train shape: {} | y_train shape: {}</span><span style="color:#a31515">\n</span><span style="color:#a31515">x_test shape : {} | y_test shape : {}&#39;</span>.format(x_train.shape, y_train.shape,
+<div class="highlight"><pre style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python">print(<span style="color:#a31515">&#39;x_train shape: </span><span style="color:#a31515">{}</span><span style="color:#a31515"> | y_train shape: </span><span style="color:#a31515">{}</span><span style="color:#a31515">\n</span><span style="color:#a31515">x_test shape : </span><span style="color:#a31515">{}</span><span style="color:#a31515"> | y_test shape : </span><span style="color:#a31515">{}</span><span style="color:#a31515">&#39;</span>.format(x_train.shape, y_train.shape,
                                                                                           x_test.shape, y_test.shape))
 </code></pre></div><pre><code>x_train shape: (50000, 32, 32, 3) | y_train shape: (50000, 10)
 x_test shape : (10000, 32, 32, 3) | y_test shape : (10000, 1)
@@ -109,9 +108,9 @@ model_input = Input(shape=input_shape)
 <div class="highlight"><pre style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python"><span style="color:#00f">def</span> compile_and_train(model, num_epochs): 
     
     model.compile(loss=categorical_crossentropy, optimizer=Adam(), metrics=[<span style="color:#a31515">&#39;acc&#39;</span>]) 
-    filepath = <span style="color:#a31515">&#39;weights/&#39;</span> + model.name + <span style="color:#a31515">&#39;.{epoch:02d}-{loss:.2f}.hdf5&#39;</span>
-    checkpoint = ModelCheckpoint(filepath, monitor=<span style="color:#a31515">&#39;loss&#39;</span>, verbose=0, save_weights_only=True,
-                                                 save_best_only=True, mode=<span style="color:#a31515">&#39;auto&#39;</span>, period=1)
+    filepath = <span style="color:#a31515">&#39;weights/&#39;</span> + model.name + <span style="color:#a31515">&#39;.</span><span style="color:#a31515">{epoch:02d}</span><span style="color:#a31515">-</span><span style="color:#a31515">{loss:.2f}</span><span style="color:#a31515">.hdf5&#39;</span>
+    checkpoint = ModelCheckpoint(filepath, monitor=<span style="color:#a31515">&#39;loss&#39;</span>, verbose=0, save_weights_only=<span style="color:#00f">True</span>,
+                                                 save_best_only=<span style="color:#00f">True</span>, mode=<span style="color:#a31515">&#39;auto&#39;</span>, period=1)
     tensor_board = TensorBoard(log_dir=<span style="color:#a31515">&#39;logs/&#39;</span>, histogram_freq=0, batch_size=32)
     history = model.fit(x=x_train, y=y_train, batch_size=32, 
                      epochs=num_epochs, verbose=1, callbacks=[checkpoint, tensor_board], validation_split=0.2)

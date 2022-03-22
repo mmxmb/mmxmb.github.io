@@ -66,7 +66,7 @@ The next one is even easier - only 12 distinct shapes:</description>
     <item>
       <title>About</title>
       <link>http://example.org/about/</link>
-      <pubDate>Thu, 01 Jan 1970 00:59:59 +0100</pubDate>
+      <pubDate>Wed, 31 Dec 1969 15:59:59 -0800</pubDate>
       
       <guid>http://example.org/about/</guid>
       <description> .item-container{ margin: 20px 20px 0 0; width:100%; overflow:hidden; } .item-thumb img { float: left; clear:left; width:50px; height:50px; } .item-title { float:left; margin-left:10px; } .dropdown { } .dropdown-content { display: none; position: absolute; z-index: 1; width:100%; margin: 0 auto; } .dropdown:hover .dropdown-content { display: block; max-height: 60%; max-width: 50%; } p { -webkit-hyphens: none; -moz-hyphens: none; -ms-hyphens: none; hyphens: none; text-align: center; }   😌   </description>
@@ -75,7 +75,7 @@ The next one is even easier - only 12 distinct shapes:</description>
     <item>
       <title>Contact</title>
       <link>http://example.org/contact/</link>
-      <pubDate>Thu, 01 Jan 1970 00:59:59 +0100</pubDate>
+      <pubDate>Wed, 31 Dec 1969 15:59:59 -0800</pubDate>
       
       <guid>http://example.org/contact/</guid>
       <description>The best way to get in touch with me is via email: max at this domain name.
