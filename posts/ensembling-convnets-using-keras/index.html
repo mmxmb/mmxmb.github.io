@@ -55,187 +55,187 @@
 
 <h2 id="preparing-the-data">Preparing the data</h2>
 <p>First, import dependencies.</p>
-<div class="highlight"><pre style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python"><span style="color:#00f">from</span> keras.models <span style="color:#00f">import</span> Model, Input
-<span style="color:#00f">from</span> keras.layers <span style="color:#00f">import</span> Conv2D, MaxPooling2D, GlobalAveragePooling2D, Dropout, Activation, Average
-<span style="color:#00f">from</span> keras.utils <span style="color:#00f">import</span> to_categorical
-<span style="color:#00f">from</span> keras.losses <span style="color:#00f">import</span> categorical_crossentropy
-<span style="color:#00f">from</span> keras.callbacks <span style="color:#00f">import</span> ModelCheckpoint, TensorBoard
-<span style="color:#00f">from</span> keras.optimizers <span style="color:#00f">import</span> Adam
-<span style="color:#00f">from</span> keras.datasets <span style="color:#00f">import</span> cifar10
-
-<span style="color:#00f">import</span> numpy <span style="color:#00f">as</span> np
-</code></pre></div><p>I am using CIFAR-10, since it is relatively easy to find papers describing architectures that work well on this dataset. Using a popular dataset also makes this example easily reproducible.</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#00f">from</span> keras.models <span style="color:#00f">import</span> Model, Input
+</span></span><span style="display:flex;"><span><span style="color:#00f">from</span> keras.layers <span style="color:#00f">import</span> Conv2D, MaxPooling2D, GlobalAveragePooling2D, Dropout, Activation, Average
+</span></span><span style="display:flex;"><span><span style="color:#00f">from</span> keras.utils <span style="color:#00f">import</span> to_categorical
+</span></span><span style="display:flex;"><span><span style="color:#00f">from</span> keras.losses <span style="color:#00f">import</span> categorical_crossentropy
+</span></span><span style="display:flex;"><span><span style="color:#00f">from</span> keras.callbacks <span style="color:#00f">import</span> ModelCheckpoint, TensorBoard
+</span></span><span style="display:flex;"><span><span style="color:#00f">from</span> keras.optimizers <span style="color:#00f">import</span> Adam
+</span></span><span style="display:flex;"><span><span style="color:#00f">from</span> keras.datasets <span style="color:#00f">import</span> cifar10
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#00f">import</span> numpy <span style="color:#00f">as</span> np
+</span></span></code></pre></div><p>I am using CIFAR-10, since it is relatively easy to find papers describing architectures that work well on this dataset. Using a popular dataset also makes this example easily reproducible.</p>
 <p>Here the dataset is imported. Both train and test image data is normalized. The training label vector is converted to a one-hot-matrix. Don&rsquo;t need to convert the test label vector, since it won&rsquo;t be used during training.</p>
-<div class="highlight"><pre style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python">(x_train, y_train), (x_test, y_test) = cifar10.load_data()
-x_train = x_train / 255.
-x_test = x_test / 255.
-y_train = to_categorical(y_train, num_classes=10)
-</code></pre></div><p>The dataset consists of 60000 32x32 RGB images from 10 classes. 50000 images are used for training/validation and the other 10000 for testing.</p>
-<div class="highlight"><pre style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python">print(<span style="color:#a31515">&#39;x_train shape: </span><span style="color:#a31515">{}</span><span style="color:#a31515"> | y_train shape: </span><span style="color:#a31515">{}</span><span style="color:#a31515">\n</span><span style="color:#a31515">x_test shape : </span><span style="color:#a31515">{}</span><span style="color:#a31515"> | y_test shape : </span><span style="color:#a31515">{}</span><span style="color:#a31515">&#39;</span>.format(x_train.shape, y_train.shape,
-                                                                                          x_test.shape, y_test.shape))
-</code></pre></div><pre><code>x_train shape: (50000, 32, 32, 3) | y_train shape: (50000, 10)
+<div class="highlight"><pre tabindex="0" style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>(x_train, y_train), (x_test, y_test) = cifar10.load_data()
+</span></span><span style="display:flex;"><span>x_train = x_train / 255.
+</span></span><span style="display:flex;"><span>x_test = x_test / 255.
+</span></span><span style="display:flex;"><span>y_train = to_categorical(y_train, num_classes=10)
+</span></span></code></pre></div><p>The dataset consists of 60000 32x32 RGB images from 10 classes. 50000 images are used for training/validation and the other 10000 for testing.</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>print(<span style="color:#a31515">&#39;x_train shape: </span><span style="color:#a31515">{}</span><span style="color:#a31515"> | y_train shape: </span><span style="color:#a31515">{}</span><span style="color:#a31515">\n</span><span style="color:#a31515">x_test shape : </span><span style="color:#a31515">{}</span><span style="color:#a31515"> | y_test shape : </span><span style="color:#a31515">{}</span><span style="color:#a31515">&#39;</span>.format(x_train.shape, y_train.shape,
+</span></span><span style="display:flex;"><span>                                                                                          x_test.shape, y_test.shape))
+</span></span></code></pre></div><pre><code>x_train shape: (50000, 32, 32, 3) | y_train shape: (50000, 10)
 x_test shape : (10000, 32, 32, 3) | y_test shape : (10000, 1)
 </code></pre>
 <p>Since all three models work with the data of the same shape, it makes sense to define a single input layer that will be used by every model.</p>
-<div class="highlight"><pre style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python">input_shape = x_train[0,:,:,:].shape
-model_input = Input(shape=input_shape)
-</code></pre></div><h1 id="first-model-convpool-cnn-c">First model: ConvPool-CNN-C</h1>
+<div class="highlight"><pre tabindex="0" style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>input_shape = x_train[0,:,:,:].shape
+</span></span><span style="display:flex;"><span>model_input = Input(shape=input_shape)
+</span></span></code></pre></div><h1 id="first-model-convpool-cnn-c">First model: ConvPool-CNN-C</h1>
 <p>The first model that I am going to train is ConvPool-CNN-C [<a href="https://arxiv.org/abs/1412.6806">4</a>]. Its descritption appears on page 4 of the linked paper.</p>
 <p>The model is pretty straightforward. It features a common pattern where several convolutional layers are followed by a pooling layer. The only thing about this model that might be unfamiliar to some people is its final layers. Instead of using several fully-connected layers, a global average pooling layer is used.</p>
 <p>Here is a brief overview of how global pooling layer works. The last convolutional layer <code>Conv2D(10, (1, 1))</code> outputs 10 feature maps corresponding to ten output classes. Then the <code>GlobalAveragePooling2D()</code> layer computes spatial average of these 10 feature maps, which means that its output is just a vector with a lenght 10. After that, a softmax activation is applied to that vector. As you can see, this method is in some way analogous to using FC layers at the top of the model. You can read more about global pooling layers and their advantages in <a href="https://arxiv.org/abs/1312.4400">5</a> paper.</p>
 <p>One important thing to note: there&rsquo;s no activation function applied to the output of the final <code>Conv2D(10, (1, 1))</code> layer, since the output of this layer has to go through <code>GlobalAveragePooling2D()</code> first.</p>
-<div class="highlight"><pre style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python"><span style="color:#00f">def</span> conv_pool_cnn(model_input):
-    
-    x = Conv2D(96, kernel_size=(3, 3), activation=<span style="color:#a31515">&#39;relu&#39;</span>, padding = <span style="color:#a31515">&#39;same&#39;</span>)(model_input)
-    x = Conv2D(96, (3, 3), activation=<span style="color:#a31515">&#39;relu&#39;</span>, padding = <span style="color:#a31515">&#39;same&#39;</span>)(x)
-    x = Conv2D(96, (3, 3), activation=<span style="color:#a31515">&#39;relu&#39;</span>, padding = <span style="color:#a31515">&#39;same&#39;</span>)(x)
-    x = MaxPooling2D(pool_size=(3, 3), strides = 2)(x)
-    x = Conv2D(192, (3, 3), activation=<span style="color:#a31515">&#39;relu&#39;</span>, padding = <span style="color:#a31515">&#39;same&#39;</span>)(x)
-    x = Conv2D(192, (3, 3), activation=<span style="color:#a31515">&#39;relu&#39;</span>, padding = <span style="color:#a31515">&#39;same&#39;</span>)(x)
-    x = Conv2D(192, (3, 3), activation=<span style="color:#a31515">&#39;relu&#39;</span>, padding = <span style="color:#a31515">&#39;same&#39;</span>)(x)
-    x = MaxPooling2D(pool_size=(3, 3), strides = 2)(x)
-    x = Conv2D(192, (3, 3), activation=<span style="color:#a31515">&#39;relu&#39;</span>, padding = <span style="color:#a31515">&#39;same&#39;</span>)(x)
-    x = Conv2D(192, (1, 1), activation=<span style="color:#a31515">&#39;relu&#39;</span>)(x)
-    x = Conv2D(10, (1, 1))(x)
-    x = GlobalAveragePooling2D()(x)
-    x = Activation(activation=<span style="color:#a31515">&#39;softmax&#39;</span>)(x)
-    
-    model = Model(model_input, x, name=<span style="color:#a31515">&#39;conv_pool_cnn&#39;</span>)
-    
-    <span style="color:#00f">return</span> model
-</code></pre></div><div class="highlight"><pre style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python">conv_pool_cnn_model = conv_pool_cnn(model_input)
-</code></pre></div><p>For simplicity&rsquo;s sake, each model is compiled and trained using the same parameters. Using 20 epochs with a batch size of 32 (1250 steps per epoch) seems sufficient for any of the three models to get to some local minima. Randomly chosen 20% of the training dataset is used for validation.</p>
-<div class="highlight"><pre style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python"><span style="color:#00f">def</span> compile_and_train(model, num_epochs): 
-    
-    model.compile(loss=categorical_crossentropy, optimizer=Adam(), metrics=[<span style="color:#a31515">&#39;acc&#39;</span>]) 
-    filepath = <span style="color:#a31515">&#39;weights/&#39;</span> + model.name + <span style="color:#a31515">&#39;.</span><span style="color:#a31515">{epoch:02d}</span><span style="color:#a31515">-</span><span style="color:#a31515">{loss:.2f}</span><span style="color:#a31515">.hdf5&#39;</span>
-    checkpoint = ModelCheckpoint(filepath, monitor=<span style="color:#a31515">&#39;loss&#39;</span>, verbose=0, save_weights_only=<span style="color:#00f">True</span>,
-                                                 save_best_only=<span style="color:#00f">True</span>, mode=<span style="color:#a31515">&#39;auto&#39;</span>, period=1)
-    tensor_board = TensorBoard(log_dir=<span style="color:#a31515">&#39;logs/&#39;</span>, histogram_freq=0, batch_size=32)
-    history = model.fit(x=x_train, y=y_train, batch_size=32, 
-                     epochs=num_epochs, verbose=1, callbacks=[checkpoint, tensor_board], validation_split=0.2)
-    <span style="color:#00f">return</span> history
-</code></pre></div><p>It takes about 1 min to train this and the next model for one epoch using a single Tesla K80 GPU. Training might take a while if you are using a CPU.</p>
-<div class="highlight"><pre style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python">_ = compile_and_train(conv_pool_cnn_model, num_epochs=20)
-</code></pre></div><p>The model achieves ~79% validation accuracy (the plots show validation accuracy/loss vs epoch #).</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#00f">def</span> conv_pool_cnn(model_input):
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span>    x = Conv2D(96, kernel_size=(3, 3), activation=<span style="color:#a31515">&#39;relu&#39;</span>, padding = <span style="color:#a31515">&#39;same&#39;</span>)(model_input)
+</span></span><span style="display:flex;"><span>    x = Conv2D(96, (3, 3), activation=<span style="color:#a31515">&#39;relu&#39;</span>, padding = <span style="color:#a31515">&#39;same&#39;</span>)(x)
+</span></span><span style="display:flex;"><span>    x = Conv2D(96, (3, 3), activation=<span style="color:#a31515">&#39;relu&#39;</span>, padding = <span style="color:#a31515">&#39;same&#39;</span>)(x)
+</span></span><span style="display:flex;"><span>    x = MaxPooling2D(pool_size=(3, 3), strides = 2)(x)
+</span></span><span style="display:flex;"><span>    x = Conv2D(192, (3, 3), activation=<span style="color:#a31515">&#39;relu&#39;</span>, padding = <span style="color:#a31515">&#39;same&#39;</span>)(x)
+</span></span><span style="display:flex;"><span>    x = Conv2D(192, (3, 3), activation=<span style="color:#a31515">&#39;relu&#39;</span>, padding = <span style="color:#a31515">&#39;same&#39;</span>)(x)
+</span></span><span style="display:flex;"><span>    x = Conv2D(192, (3, 3), activation=<span style="color:#a31515">&#39;relu&#39;</span>, padding = <span style="color:#a31515">&#39;same&#39;</span>)(x)
+</span></span><span style="display:flex;"><span>    x = MaxPooling2D(pool_size=(3, 3), strides = 2)(x)
+</span></span><span style="display:flex;"><span>    x = Conv2D(192, (3, 3), activation=<span style="color:#a31515">&#39;relu&#39;</span>, padding = <span style="color:#a31515">&#39;same&#39;</span>)(x)
+</span></span><span style="display:flex;"><span>    x = Conv2D(192, (1, 1), activation=<span style="color:#a31515">&#39;relu&#39;</span>)(x)
+</span></span><span style="display:flex;"><span>    x = Conv2D(10, (1, 1))(x)
+</span></span><span style="display:flex;"><span>    x = GlobalAveragePooling2D()(x)
+</span></span><span style="display:flex;"><span>    x = Activation(activation=<span style="color:#a31515">&#39;softmax&#39;</span>)(x)
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span>    model = Model(model_input, x, name=<span style="color:#a31515">&#39;conv_pool_cnn&#39;</span>)
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span>    <span style="color:#00f">return</span> model
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>conv_pool_cnn_model = conv_pool_cnn(model_input)
+</span></span></code></pre></div><p>For simplicity&rsquo;s sake, each model is compiled and trained using the same parameters. Using 20 epochs with a batch size of 32 (1250 steps per epoch) seems sufficient for any of the three models to get to some local minima. Randomly chosen 20% of the training dataset is used for validation.</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#00f">def</span> compile_and_train(model, num_epochs): 
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span>    model.compile(loss=categorical_crossentropy, optimizer=Adam(), metrics=[<span style="color:#a31515">&#39;acc&#39;</span>]) 
+</span></span><span style="display:flex;"><span>    filepath = <span style="color:#a31515">&#39;weights/&#39;</span> + model.name + <span style="color:#a31515">&#39;.</span><span style="color:#a31515">{epoch:02d}</span><span style="color:#a31515">-</span><span style="color:#a31515">{loss:.2f}</span><span style="color:#a31515">.hdf5&#39;</span>
+</span></span><span style="display:flex;"><span>    checkpoint = ModelCheckpoint(filepath, monitor=<span style="color:#a31515">&#39;loss&#39;</span>, verbose=0, save_weights_only=<span style="color:#00f">True</span>,
+</span></span><span style="display:flex;"><span>                                                 save_best_only=<span style="color:#00f">True</span>, mode=<span style="color:#a31515">&#39;auto&#39;</span>, period=1)
+</span></span><span style="display:flex;"><span>    tensor_board = TensorBoard(log_dir=<span style="color:#a31515">&#39;logs/&#39;</span>, histogram_freq=0, batch_size=32)
+</span></span><span style="display:flex;"><span>    history = model.fit(x=x_train, y=y_train, batch_size=32, 
+</span></span><span style="display:flex;"><span>                     epochs=num_epochs, verbose=1, callbacks=[checkpoint, tensor_board], validation_split=0.2)
+</span></span><span style="display:flex;"><span>    <span style="color:#00f">return</span> history
+</span></span></code></pre></div><p>It takes about 1 min to train this and the next model for one epoch using a single Tesla K80 GPU. Training might take a while if you are using a CPU.</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>_ = compile_and_train(conv_pool_cnn_model, num_epochs=20)
+</span></span></code></pre></div><p>The model achieves ~79% validation accuracy (the plots show validation accuracy/loss vs epoch #).</p>
 <p><img src="/ensembling-convnets-using-keras/tensorboard_plots/11.png" alt="Accuracy plot"></p>
 <p>One simple way to evaluate the model is to calculate the error rate on the test set.</p>
-<div class="highlight"><pre style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python"><span style="color:#00f">def</span> evaluate_error(model):
-    pred = model.predict(x_test, batch_size = 32)
-    pred = np.argmax(pred, axis=1)
-    pred = np.expand_dims(pred, axis=1) <span style="color:#008000"># make same shape as y_test</span>
-    error = np.sum(np.not_equal(pred, y_test)) / y_test.shape[0]    
-    <span style="color:#00f">return</span> error
-</code></pre></div><div class="highlight"><pre style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python">evaluate_error(conv_pool_cnn_model)
-</code></pre></div><pre><code>0.2414
+<div class="highlight"><pre tabindex="0" style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#00f">def</span> evaluate_error(model):
+</span></span><span style="display:flex;"><span>    pred = model.predict(x_test, batch_size = 32)
+</span></span><span style="display:flex;"><span>    pred = np.argmax(pred, axis=1)
+</span></span><span style="display:flex;"><span>    pred = np.expand_dims(pred, axis=1) <span style="color:#008000"># make same shape as y_test</span>
+</span></span><span style="display:flex;"><span>    error = np.sum(np.not_equal(pred, y_test)) / y_test.shape[0]    
+</span></span><span style="display:flex;"><span>    <span style="color:#00f">return</span> error
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>evaluate_error(conv_pool_cnn_model)
+</span></span></code></pre></div><pre><code>0.2414
 </code></pre>
 <h1 id="second-model-all-cnn-c">Second model: ALL-CNN-C</h1>
 <p>The next CNN, ALL-CNN-C, comes from the same paper [<a href="https://arxiv.org/abs/1412.6806">4</a>]. This model is very similar to the previous one. Really, the only difference is that convolutional layers with a stride of 2 are used in place of max pooling layers. Again, note that there is no activation function used immediately after the <code>Conv2D(10, (1, 1))</code> layer. The model will fail to train if a <code>relu</code> activation is used immediately after that layer.</p>
-<div class="highlight"><pre style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python"><span style="color:#00f">def</span> all_cnn(model_input):
-    
-    x = Conv2D(96, kernel_size=(3, 3), activation=<span style="color:#a31515">&#39;relu&#39;</span>, padding = <span style="color:#a31515">&#39;same&#39;</span>)(model_input)
-    x = Conv2D(96, (3, 3), activation=<span style="color:#a31515">&#39;relu&#39;</span>, padding = <span style="color:#a31515">&#39;same&#39;</span>)(x)
-    x = Conv2D(96, (3, 3), activation=<span style="color:#a31515">&#39;relu&#39;</span>, padding = <span style="color:#a31515">&#39;same&#39;</span>, strides = 2)(x)
-    x = Conv2D(192, (3, 3), activation=<span style="color:#a31515">&#39;relu&#39;</span>, padding = <span style="color:#a31515">&#39;same&#39;</span>)(x)
-    x = Conv2D(192, (3, 3), activation=<span style="color:#a31515">&#39;relu&#39;</span>, padding = <span style="color:#a31515">&#39;same&#39;</span>)(x)
-    x = Conv2D(192, (3, 3), activation=<span style="color:#a31515">&#39;relu&#39;</span>, padding = <span style="color:#a31515">&#39;same&#39;</span>, strides = 2)(x)
-    x = Conv2D(192, (3, 3), activation=<span style="color:#a31515">&#39;relu&#39;</span>, padding = <span style="color:#a31515">&#39;same&#39;</span>)(x)
-    x = Conv2D(192, (1, 1), activation=<span style="color:#a31515">&#39;relu&#39;</span>)(x)
-    x = Conv2D(10, (1, 1))(x)
-    x = GlobalAveragePooling2D()(x)
-    x = Activation(activation=<span style="color:#a31515">&#39;softmax&#39;</span>)(x)
-        
-    model = Model(model_input, x, name=<span style="color:#a31515">&#39;all_cnn&#39;</span>)
-    
-    <span style="color:#00f">return</span> model
-</code></pre></div><div class="highlight"><pre style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python">all_cnn_model = all_cnn(model_input)
-</code></pre></div><div class="highlight"><pre style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python">_ = compile_and_train(all_cnn_model, num_epochs=20)
-</code></pre></div><p>The model converges to ~75% validation accuracy.</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#00f">def</span> all_cnn(model_input):
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span>    x = Conv2D(96, kernel_size=(3, 3), activation=<span style="color:#a31515">&#39;relu&#39;</span>, padding = <span style="color:#a31515">&#39;same&#39;</span>)(model_input)
+</span></span><span style="display:flex;"><span>    x = Conv2D(96, (3, 3), activation=<span style="color:#a31515">&#39;relu&#39;</span>, padding = <span style="color:#a31515">&#39;same&#39;</span>)(x)
+</span></span><span style="display:flex;"><span>    x = Conv2D(96, (3, 3), activation=<span style="color:#a31515">&#39;relu&#39;</span>, padding = <span style="color:#a31515">&#39;same&#39;</span>, strides = 2)(x)
+</span></span><span style="display:flex;"><span>    x = Conv2D(192, (3, 3), activation=<span style="color:#a31515">&#39;relu&#39;</span>, padding = <span style="color:#a31515">&#39;same&#39;</span>)(x)
+</span></span><span style="display:flex;"><span>    x = Conv2D(192, (3, 3), activation=<span style="color:#a31515">&#39;relu&#39;</span>, padding = <span style="color:#a31515">&#39;same&#39;</span>)(x)
+</span></span><span style="display:flex;"><span>    x = Conv2D(192, (3, 3), activation=<span style="color:#a31515">&#39;relu&#39;</span>, padding = <span style="color:#a31515">&#39;same&#39;</span>, strides = 2)(x)
+</span></span><span style="display:flex;"><span>    x = Conv2D(192, (3, 3), activation=<span style="color:#a31515">&#39;relu&#39;</span>, padding = <span style="color:#a31515">&#39;same&#39;</span>)(x)
+</span></span><span style="display:flex;"><span>    x = Conv2D(192, (1, 1), activation=<span style="color:#a31515">&#39;relu&#39;</span>)(x)
+</span></span><span style="display:flex;"><span>    x = Conv2D(10, (1, 1))(x)
+</span></span><span style="display:flex;"><span>    x = GlobalAveragePooling2D()(x)
+</span></span><span style="display:flex;"><span>    x = Activation(activation=<span style="color:#a31515">&#39;softmax&#39;</span>)(x)
+</span></span><span style="display:flex;"><span>        
+</span></span><span style="display:flex;"><span>    model = Model(model_input, x, name=<span style="color:#a31515">&#39;all_cnn&#39;</span>)
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span>    <span style="color:#00f">return</span> model
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>all_cnn_model = all_cnn(model_input)
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>_ = compile_and_train(all_cnn_model, num_epochs=20)
+</span></span></code></pre></div><p>The model converges to ~75% validation accuracy.</p>
 <p><img src="/ensembling-convnets-using-keras/tensorboard_plots/22.png" alt="Accuracy plot"></p>
 <p>Since two models are very similar to each other, it is expected that the error rate doesn&rsquo;t differ much.</p>
-<div class="highlight"><pre style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python">evaluate_error(all_cnn_model)
-</code></pre></div><pre><code>0.26090000000000002
+<div class="highlight"><pre tabindex="0" style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>evaluate_error(all_cnn_model)
+</span></span></code></pre></div><pre><code>0.26090000000000002
 </code></pre>
 <h1 id="third-model-network-in-network-cnn">Third Model: Network In Network CNN</h1>
 <p>The third CNN is Network in Network CNN [<a href="https://arxiv.org/abs/1312.4400">5</a>]. This is a CNN from the paper that introduced global pooling layers. It&rsquo;s smaller than previous two models, therefore is much faster to train. No <code>relu</code> after the final convolutional layer!</p>
-<div class="highlight"><pre style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python"><span style="color:#00f">def</span> nin_cnn(model_input):
-    
-    <span style="color:#008000">#mlpconv block 1</span>
-    x = Conv2D(32, (5, 5), activation=<span style="color:#a31515">&#39;relu&#39;</span>,padding=<span style="color:#a31515">&#39;valid&#39;</span>)(model_input)
-    x = Conv2D(32, (1, 1), activation=<span style="color:#a31515">&#39;relu&#39;</span>)(x)
-    x = Conv2D(32, (1, 1), activation=<span style="color:#a31515">&#39;relu&#39;</span>)(x)
-    x = MaxPooling2D((2,2))(x)
-    x = Dropout(0.5)(x)
-    
-    <span style="color:#008000">#mlpconv block2</span>
-    x = Conv2D(64, (3, 3), activation=<span style="color:#a31515">&#39;relu&#39;</span>,padding=<span style="color:#a31515">&#39;valid&#39;</span>)(x)
-    x = Conv2D(64, (1, 1), activation=<span style="color:#a31515">&#39;relu&#39;</span>)(x)
-    x = Conv2D(64, (1, 1), activation=<span style="color:#a31515">&#39;relu&#39;</span>)(x)
-    x = MaxPooling2D((2,2))(x)
-    x = Dropout(0.5)(x)
-    
-    <span style="color:#008000">#mlpconv block3</span>
-    x = Conv2D(128, (3, 3), activation=<span style="color:#a31515">&#39;relu&#39;</span>,padding=<span style="color:#a31515">&#39;valid&#39;</span>)(x)
-    x = Conv2D(32, (1, 1), activation=<span style="color:#a31515">&#39;relu&#39;</span>)(x)
-    x = Conv2D(10, (1, 1))(x)
-    
-    x = GlobalAveragePooling2D()(x)
-    x = Activation(activation=<span style="color:#a31515">&#39;softmax&#39;</span>)(x)
-    
-    model = Model(model_input, x, name=<span style="color:#a31515">&#39;nin_cnn&#39;</span>)
-    
-    <span style="color:#00f">return</span> model
-</code></pre></div><div class="highlight"><pre style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python">nin_cnn_model = nin_cnn(model_input)
-</code></pre></div><p>This model trains much faster -  15 seconds per epoch on my machine.</p>
-<div class="highlight"><pre style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python">_ = compile_and_train(nin_cnn_model, num_epochs=20)
-</code></pre></div><p>The model achieves ~65% validation accuracy.</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#00f">def</span> nin_cnn(model_input):
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span>    <span style="color:#008000">#mlpconv block 1</span>
+</span></span><span style="display:flex;"><span>    x = Conv2D(32, (5, 5), activation=<span style="color:#a31515">&#39;relu&#39;</span>,padding=<span style="color:#a31515">&#39;valid&#39;</span>)(model_input)
+</span></span><span style="display:flex;"><span>    x = Conv2D(32, (1, 1), activation=<span style="color:#a31515">&#39;relu&#39;</span>)(x)
+</span></span><span style="display:flex;"><span>    x = Conv2D(32, (1, 1), activation=<span style="color:#a31515">&#39;relu&#39;</span>)(x)
+</span></span><span style="display:flex;"><span>    x = MaxPooling2D((2,2))(x)
+</span></span><span style="display:flex;"><span>    x = Dropout(0.5)(x)
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span>    <span style="color:#008000">#mlpconv block2</span>
+</span></span><span style="display:flex;"><span>    x = Conv2D(64, (3, 3), activation=<span style="color:#a31515">&#39;relu&#39;</span>,padding=<span style="color:#a31515">&#39;valid&#39;</span>)(x)
+</span></span><span style="display:flex;"><span>    x = Conv2D(64, (1, 1), activation=<span style="color:#a31515">&#39;relu&#39;</span>)(x)
+</span></span><span style="display:flex;"><span>    x = Conv2D(64, (1, 1), activation=<span style="color:#a31515">&#39;relu&#39;</span>)(x)
+</span></span><span style="display:flex;"><span>    x = MaxPooling2D((2,2))(x)
+</span></span><span style="display:flex;"><span>    x = Dropout(0.5)(x)
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span>    <span style="color:#008000">#mlpconv block3</span>
+</span></span><span style="display:flex;"><span>    x = Conv2D(128, (3, 3), activation=<span style="color:#a31515">&#39;relu&#39;</span>,padding=<span style="color:#a31515">&#39;valid&#39;</span>)(x)
+</span></span><span style="display:flex;"><span>    x = Conv2D(32, (1, 1), activation=<span style="color:#a31515">&#39;relu&#39;</span>)(x)
+</span></span><span style="display:flex;"><span>    x = Conv2D(10, (1, 1))(x)
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span>    x = GlobalAveragePooling2D()(x)
+</span></span><span style="display:flex;"><span>    x = Activation(activation=<span style="color:#a31515">&#39;softmax&#39;</span>)(x)
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span>    model = Model(model_input, x, name=<span style="color:#a31515">&#39;nin_cnn&#39;</span>)
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span>    <span style="color:#00f">return</span> model
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>nin_cnn_model = nin_cnn(model_input)
+</span></span></code></pre></div><p>This model trains much faster -  15 seconds per epoch on my machine.</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>_ = compile_and_train(nin_cnn_model, num_epochs=20)
+</span></span></code></pre></div><p>The model achieves ~65% validation accuracy.</p>
 <p><img src="/ensembling-convnets-using-keras/tensorboard_plots/33.png" alt="Accuracy plot"></p>
 <p>This is more simple than the other two, so the error rate is a bit higher.</p>
-<div class="highlight"><pre style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python">evaluate_error(nin_cnn_model)
-</code></pre></div><pre><code>0.31640000000000001
+<div class="highlight"><pre tabindex="0" style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>evaluate_error(nin_cnn_model)
+</span></span></code></pre></div><pre><code>0.31640000000000001
 </code></pre>
 <h1 id="three-model-ensemble">Three Model Ensemble</h1>
 <p>Now all three models will be combined in an ensemble.</p>
 <p>Here, all three models are reinstantiated and the best saved weights are loaded.</p>
-<div class="highlight"><pre style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python">conv_pool_cnn_model = conv_pool_cnn(model_input)
-all_cnn_model = all_cnn(model_input)
-nin_cnn_model = nin_cnn(model_input)
-
-conv_pool_cnn_model.load_weights(<span style="color:#a31515">&#39;weights/conv_pool_cnn.29-0.10.hdf5&#39;</span>)
-all_cnn_model.load_weights(<span style="color:#a31515">&#39;weights/all_cnn.30-0.08.hdf5&#39;</span>)
-nin_cnn_model.load_weights(<span style="color:#a31515">&#39;weights/nin_cnn.30-0.93.hdf5&#39;</span>)
-
-models = [conv_pool_cnn_model, all_cnn_model, nin_cnn_model]
-</code></pre></div><p>Ensemble model definition is very straightforward. It uses the same input layer thas is shared between all previous models. In the top layer, the ensemble computes the average of three models' outputs by using <code>Average()</code> merge layer.</p>
-<div class="highlight"><pre style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python"><span style="color:#00f">def</span> ensemble(models, model_input):
-    
-    outputs = [model.outputs[0] <span style="color:#00f">for</span> model <span style="color:#00f">in</span> models]
-    y = Average()(outputs)
-    
-    model = Model(model_input, y, name=<span style="color:#a31515">&#39;ensemble&#39;</span>)
-    
-    <span style="color:#00f">return</span> model
-</code></pre></div><div class="highlight"><pre style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python">ensemble_model = ensemble(models, model_input)
-</code></pre></div><p>As expected, the ensemble has a lower error rate than any single model.</p>
-<div class="highlight"><pre style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python">evaluate_error(ensemble_model)
-</code></pre></div><pre><code>0.2049
+<div class="highlight"><pre tabindex="0" style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>conv_pool_cnn_model = conv_pool_cnn(model_input)
+</span></span><span style="display:flex;"><span>all_cnn_model = all_cnn(model_input)
+</span></span><span style="display:flex;"><span>nin_cnn_model = nin_cnn(model_input)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>conv_pool_cnn_model.load_weights(<span style="color:#a31515">&#39;weights/conv_pool_cnn.29-0.10.hdf5&#39;</span>)
+</span></span><span style="display:flex;"><span>all_cnn_model.load_weights(<span style="color:#a31515">&#39;weights/all_cnn.30-0.08.hdf5&#39;</span>)
+</span></span><span style="display:flex;"><span>nin_cnn_model.load_weights(<span style="color:#a31515">&#39;weights/nin_cnn.30-0.93.hdf5&#39;</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>models = [conv_pool_cnn_model, all_cnn_model, nin_cnn_model]
+</span></span></code></pre></div><p>Ensemble model definition is very straightforward. It uses the same input layer thas is shared between all previous models. In the top layer, the ensemble computes the average of three models&rsquo; outputs by using <code>Average()</code> merge layer.</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#00f">def</span> ensemble(models, model_input):
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span>    outputs = [model.outputs[0] <span style="color:#00f">for</span> model <span style="color:#00f">in</span> models]
+</span></span><span style="display:flex;"><span>    y = Average()(outputs)
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span>    model = Model(model_input, y, name=<span style="color:#a31515">&#39;ensemble&#39;</span>)
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span>    <span style="color:#00f">return</span> model
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>ensemble_model = ensemble(models, model_input)
+</span></span></code></pre></div><p>As expected, the ensemble has a lower error rate than any single model.</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>evaluate_error(ensemble_model)
+</span></span></code></pre></div><pre><code>0.2049
 </code></pre>
 <h1 id="other-possible-ensembles">Other Possible Ensembles</h1>
 <p>Just for completeness, we can check performance of ensembles that consist of 2 model combinations.</p>
-<div class="highlight"><pre style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python">pair_A = [conv_pool_cnn_model, all_cnn_model]
-pair_B = [conv_pool_cnn_model, nin_cnn_model]
-pair_C = [all_cnn_model, nin_cnn_model]
-</code></pre></div><div class="highlight"><pre style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python">pair_A_ensemble_model = ensemble(pair_A, model_input)
-evaluate_error(pair_A_ensemble_model)
-</code></pre></div><pre><code>0.21199999999999999
+<div class="highlight"><pre tabindex="0" style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>pair_A = [conv_pool_cnn_model, all_cnn_model]
+</span></span><span style="display:flex;"><span>pair_B = [conv_pool_cnn_model, nin_cnn_model]
+</span></span><span style="display:flex;"><span>pair_C = [all_cnn_model, nin_cnn_model]
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>pair_A_ensemble_model = ensemble(pair_A, model_input)
+</span></span><span style="display:flex;"><span>evaluate_error(pair_A_ensemble_model)
+</span></span></code></pre></div><pre><code>0.21199999999999999
 </code></pre>
-<div class="highlight"><pre style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python">pair_B_ensemble_model = ensemble(pair_B, model_input)
-evaluate_error(pair_B_ensemble_model)
-</code></pre></div><pre><code>0.22819999999999999
+<div class="highlight"><pre tabindex="0" style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>pair_B_ensemble_model = ensemble(pair_B, model_input)
+</span></span><span style="display:flex;"><span>evaluate_error(pair_B_ensemble_model)
+</span></span></code></pre></div><pre><code>0.22819999999999999
 </code></pre>
-<div class="highlight"><pre style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python">pair_C_ensemble_model = ensemble(pair_C, model_input)
-evaluate_error(pair_C_ensemble_model)
-</code></pre></div><pre><code>0.2447
+<div class="highlight"><pre tabindex="0" style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>pair_C_ensemble_model = ensemble(pair_C, model_input)
+</span></span><span style="display:flex;"><span>evaluate_error(pair_C_ensemble_model)
+</span></span></code></pre></div><pre><code>0.2447
 </code></pre>
 <h1 id="conclusion">Conclusion</h1>
 <p>To reiterate what was said in the introduction: every model has its own weaknesses. The reasoning behind using an ensemble is that by stacking different models representing different hypotheses about the data, we can find a better hypothesis that is not in the hypothesis space of the models from which the ensemble is built.</p>

@@ -30,7 +30,7 @@
 <div class="article-meta">
   <h1><span class="title">BorgBackup on macOS</span></h1>
   
-  <h4 class="date"><span title="Publishing date." style="color: #000">June 24, 2020</span> - <span title="Date of the last major modification to this page." style="color: #000">June 28, 2020</spn></h4>
+  <h4 class="date"><span title="Publishing date." style="color: #000">June 24, 2020</span> - <span title="Date of the last major modification to this page." style="color: #000">December 29, 2023</spn></h4>
   
 </div>
 
@@ -44,391 +44,303 @@
 <p>There are two main requirements that I had when choosing an off-site backup tool:</p>
 <ul>
 <li>Must have end-to-end encryption (E2EE)</li>
-<li>Must be open-source (mostly so that I can easily verify E2EE claim)</li>
+<li>Must be open-source (mostly so that I can easily E2EE claim)</li>
 </ul>
 <p>The first requirement excludes services like Dropbox and Google Drive from the search. The second requirement excludes closed-source software that claim to have E2EE (e.g. Arq, Backblaze).</p>
-<p>In the end, I decided to learn how to use <a href="https://www.borgbackup.org/">BorgBackup</a>. BorgBackup (or Borg) is an open source &ldquo;deduplicating archiver with compression and encryption&rdquo;. This project has many contributors and turned 10 years old in March 2020. Borg has also been called the <a href="https://www.stavros.io/posts/holy-grail-backups/">&ldquo;holy grail of backups&rdquo;</a>; this definitely intrigued me.</p>
+<p>In the end, I decided to learn how to use <a href="https://www.borgbackup.org/">BorgBackup</a>. BorgBackup (or Borg) is an open source &ldquo;deduplicating archiver with compression and encryption&rdquo;. This project has many contributors and turned 10 years old in March 2020.</p>
 <p>There are many good articles describing how Borg works and how to use it, so I won&rsquo;t focus on that (but I will link to these articles in the process). Instead, this article is a compilation of notes that I took while setting up and automating Borg on macOS Catalina.</p>
 <hr>
-<p>FYI this article was written using macOS Catalina 10.15.5 and borg 1.1.13.</p>
+<p>FYI this article was originally written for macOS Catalina 10.15.5 and borg 1.1.13. In Dec 2023 it received a major update for macOS Sonoma 14.2.1 and borg 1.2.7.</p>
 <h1 id="hosting">Hosting</h1>
 <p>I decided to go with Hetzner Storage Box since it comes with Borg support. In this case there is no need to worry about setting up Borg server, only the client on the local machine. The only thing that needs to be done on the server is adding the local machine SSH public key to <code>~/.ssh/authorized_keys</code> on the server. Storage Boxes use RAID which is great since <a href="https://borgbackup.readthedocs.io/en/stable/faq.html#can-project-name-add-redundancy-to-the-backup-data-to-deal-with-hardware-malfunction">Borg does not add redundancy to deal with hardware malfunction</a>.</p>
 <p>In general, any VPS hosting would work; you just need to make sure that both the client and the server have Borg installed.</p>
 <h1 id="installation">Installation</h1>
-<p>There is a <a href="https://formulae.brew.sh/cask/borgbackup">Brew cask</a> for Borg so installation on macOS is simple:</p>
-<div class="highlight"><pre style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">brew cask install borgbackup
-</code></pre></div><p>For the server, there are <a href="https://borgbackup.readthedocs.io/en/stable/installation.html#distribution-package">distribution packages available</a> for most common Linux and BSD distros.</p>
+<p>There is a <a href="https://formulae.brew.sh/formula/borgbackup">Brew formula</a> for Borg so installation on macOS is simple:</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>brew cask install borgbackup
+</span></span></code></pre></div><p>For the server, there are <a href="https://borgbackup.readthedocs.io/en/stable/installation.html#distribution-package">distribution packages available</a> for most common Linux and BSD distros.</p>
 <h1 id="remote-backup-setup">Remote backup setup</h1>
 <h2 id="repo-initialization">Repo initialization</h2>
 <p>Before a backup can be made a repository has to be initialized. The main decision that has to be made at this point is encryption key mode selection (this cannot be changed later).</p>
-<p>Borg offers 4 options for authenticated encryption with associated data (AEAD):</p>
-<ul>
-<li><code>repokey</code>: the key is stored inside the repo but still needs a passphrase; use HMAC-SHA-256 for authentication</li>
-<li><code>keyfile</code>: the key is stored with the client, still needs a passphrase; use HMAC-SHA-256 for authentication</li>
-<li><code>repokey-blake2</code>: like <code>repokey</code> but use BLAKE2b-256 for authentication</li>
-<li><code>keyfile-blake2</code>: like <code>keyfile</code> but use BLAKE2b-256 for authentication</li>
-</ul>
-<p>All 4 options use AES-256-CTR for encryption.</p>
+<p>Borg offers various options for authenticated encryption with associated data (AEAD). All options use AES-CTR-256 for encryption.</p>
 <p>See Borg docs on <a href="https://borgbackup.readthedocs.io/en/stable/internals/security.html#encryption">Encryption</a> and <a href="https://borgbackup.readthedocs.io/en/stable/usage/init.html">borg init</a> for more information on these options.</p>
 <p>Example initialization:</p>
-<div class="highlight"><pre style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">borg init --encryption=repokey-blake2 <span style="color:#a31515">\
-</span><span style="color:#a31515"></span>    ssh://username@username.your-storagebox.de:23/./backup/mbp2015
-</code></pre></div><h2 id="backup-script">Backup script</h2>
+<div class="highlight"><pre tabindex="0" style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>borg init --encryption=repokey-blake2 <span style="color:#a31515">\
+</span></span></span><span style="display:flex;"><span><span style="color:#a31515"></span>    ssh://username@username.your-storagebox.de:23/./backup/mbp2015
+</span></span></code></pre></div><h2 id="backup-script">Backup script</h2>
 <p>I used a combination of sources to write the backup script:</p>
 <ul>
-<li><a href="https://practical-admin.com/blog/backups-using-borg/">The Practical Administrator: Backups using Borg</a></li>
 <li><a href="https://community.hetzner.com/tutorials/install-and-configure-borgbackup?title=BorgBackup/en">Hetzner Tutorials: Install and Configure BorgBackup</a></li>
 <li><a href="https://borgbackup.readthedocs.io/en/stable/">Borg Documentation</a></li>
 </ul>
-<p>Since both articles give a detailed walkthrough of a typical <em>archive-then-prune</em> workflow, I won&rsquo;t go into great detail here. Borg usage docs are also very useful, especially when writing command arguments.</p>
-<p>Here is my final backup script with detailed comments in case any of the sources goes down; <strong>remove the comments in between command arguments before running</strong>:</p>
-<div class="highlight"><pre style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash"><span style="color:#00f">#!/bin/sh
-</span><span style="color:#00f"></span>
-<span style="color:#008000"># default repo location so that we can use &#39;::archive&#39; shorthand notation later</span>
-export BORG_REPO=<span style="color:#a31515">&#39;ssh://username@username.your-storagebox.de:23/./backup/mbp2015&#39;</span>
-<span style="color:#008000"># explicitly specify the SSH key</span>
-export BORG_RSH=<span style="color:#a31515">&#39;ssh -i /Users/mmxmb/.ssh/storagebox_key&#39;</span>
-<span style="color:#008000"># only passphrase is needed for repokey borg repo</span>
-export BORG_PASSPHRASE=<span style="color:#a31515">&#39;VERY_LONG_PASSPHRASE&#39;</span>
-
-<span style="color:#008000"># some helpers and error handling:</span>
-info() { printf <span style="color:#a31515">&#34;\n%s %s\n\n&#34;</span> <span style="color:#a31515">&#34;</span><span style="color:#00f">$(</span> date <span style="color:#00f">)</span><span style="color:#a31515">&#34;</span> <span style="color:#a31515">&#34;</span>$*<span style="color:#a31515">&#34;</span> &gt;&amp;2; }
-trap <span style="color:#a31515">&#39;echo $( date ) Backup interrupted &gt;&amp;2; exit 2&#39;</span> INT TERM
-
-info <span style="color:#a31515">&#34;Starting backup&#34;</span>
-
-<span style="color:#008000"># create a daily backup</span>
-/usr/local/bin/borg create <span style="color:#a31515">\
-</span><span style="color:#a31515"></span>    <span style="color:#008000"># work on log level INFO; </span>
-    --verbose <span style="color:#a31515">\
-</span><span style="color:#a31515"></span>   <span style="color:#008000"># output list of items added (A), modified (M)</span>
-   <span style="color:#008000"># also output if error happened when accessing a file (E)</span>
-   --list --filter=AME <span style="color:#a31515">\
-</span><span style="color:#a31515"></span>   <span style="color:#008000"># print stats for the created archive at the end; log the return code (rc)</span>
-   --stats --show-rc <span style="color:#a31515">\
-</span><span style="color:#a31515"></span>   <span style="color:#008000"># use lzma compression (low speed, high compression)</span>
-   <span style="color:#008000"># use a heuristic to decide per chunk whether to compress or not (auto)</span>
-   --compression auto,lzma,6 <span style="color:#a31515">\
-</span><span style="color:#a31515"></span>   <span style="color:#008000"># repo name is inferred from $BORG_REPO</span>
-    <span style="color:#a31515">&#39;::{hostname}-daily-{now}&#39;</span> <span style="color:#a31515">\
-</span><span style="color:#a31515"></span>      <span style="color:#008000"># directories to backup</span>
-      /Users/mmxmb/my_important_docs <span style="color:#a31515">\
-</span><span style="color:#a31515"></span>      /Users/mmxmb/my_photos <span style="color:#a31515">\
-</span><span style="color:#a31515"></span>      /Users/mmxmb/Desktop
-
-backup_exit=$?
-
-info <span style="color:#a31515">&#34;Pruning repository&#34;</span>
-
-<span style="color:#008000"># prune the repo</span>
-/usr/local/bin/borg prune <span style="color:#a31515">\
-</span><span style="color:#a31515"></span>    <span style="color:#008000"># output verbose list of archives kept/pruned; display prune stats at the end</span>
-    --list --stats <span style="color:#a31515">\
-</span><span style="color:#a31515"></span>    <span style="color:#008000"># only consider archive names starting with this prefix</span>
-    --prefix <span style="color:#a31515">&#39;{hostname}-daily-&#39;</span> <span style="color:#a31515">\
-</span><span style="color:#a31515"></span>    --show-rc <span style="color:#a31515">\
-</span><span style="color:#a31515"></span>    <span style="color:#008000"># number of archives to keep for each time interval</span>
-    <span style="color:#008000"># example visualisation: https://borgbackup.readthedocs.io/en/stable/usage/prune.html</span>
-    --keep-daily 7 <span style="color:#a31515">\
-</span><span style="color:#a31515"></span>    --keep-weekly 5 <span style="color:#a31515">\
-</span><span style="color:#a31515"></span>    --keep-monthly 6
-
-prune_exit=$?
-
-<span style="color:#008000"># use highest exit code as exit code</span>
-global_exit=<span style="color:#00f">$((</span> backup_exit &gt; prune_exit ? backup_exit : prune_exit <span style="color:#00f">))</span>
-
-<span style="color:#00f">if</span> [ <span style="color:#a31515">${</span>global_exit<span style="color:#a31515">}</span> -eq 1 ];
-<span style="color:#00f">then</span>
-    info <span style="color:#a31515">&#34;Backup and/or Prune finished with a warning&#34;</span>
-<span style="color:#00f">fi</span>
-
-<span style="color:#00f">if</span> [ <span style="color:#a31515">${</span>global_exit<span style="color:#a31515">}</span> -gt 1 ];
-<span style="color:#00f">then</span>
-    info <span style="color:#a31515">&#34;Backup and/or Prune finished with an error&#34;</span>
-<span style="color:#00f">fi</span>
-
-exit <span style="color:#a31515">${</span>global_exit<span style="color:#a31515">}</span>
-</code></pre></div><p>This script is adapted mostly from <a href="https://practical-admin.com/blog/backups-using-borg/">The Practical Administrator article</a>.</p>
-<p>At this point it is a good idea to stop and play around with Borg to check that everything works smoothly before moving on to the automation step. In my case, I initialized a test Borg repo, used the above script to create an archive of a directory full of text files (so that I don&rsquo;t have to wait much for compression and encryption), tested extract and prune commands, and finally deleted the repo.</p>
+<p>Hetzner article give a detailed walkthrough of a typical <em>archive-then-prune</em> workflow, I won&rsquo;t go into great detail here. Borg usage docs are also very useful, especially when writing command arguments.</p>
+<p>Here is my final backup script that I&rsquo;ve been using for my daily backups for the last several years. This script contains detailed comments in case any of the sources goes down; <strong>remove the comments in between command arguments before running</strong>:</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#00f">#!/bin/sh
+</span></span></span><span style="display:flex;"><span><span style="color:#00f"></span>
+</span></span><span style="display:flex;"><span>export BORG_FILES_CACHE_TTL=40 <span style="color:#008000"># https://borgbackup.readthedocs.io/en/stable/faq.html#it-always-chunks-all-my-files-even-unchanged-ones</span>
+</span></span><span style="display:flex;"><span><span style="color:#008000"># default repo location so that we can use &#39;::archive&#39; shorthand notation later</span>
+</span></span><span style="display:flex;"><span>export BORG_REPO=<span style="color:#a31515">&#39;ssh://username@username.your-storagebox.de:23/./backup/mbp2015&#39;</span>
+</span></span><span style="display:flex;"><span><span style="color:#008000"># get repo passphrase from 1Password</span>
+</span></span><span style="display:flex;"><span>export BORG_PASSCOMMAND=<span style="color:#a31515">&#39;/opt/homebrew/bin/op read &#34;op://borg-backup/remote/passphrase&#34;&#39;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#008000"># some helpers and error handling:</span>
+</span></span><span style="display:flex;"><span>info() { printf <span style="color:#a31515">&#34;\n%s %s\n\n&#34;</span> <span style="color:#a31515">&#34;</span><span style="color:#00f">$(</span> date <span style="color:#00f">)</span><span style="color:#a31515">&#34;</span> <span style="color:#a31515">&#34;</span>$*<span style="color:#a31515">&#34;</span> &gt;&amp;2; }
+</span></span><span style="display:flex;"><span>trap <span style="color:#a31515">&#39;echo $( date ) Backup interrupted &gt;&amp;2; exit 2&#39;</span> INT TERM
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>info <span style="color:#a31515">&#34;Starting backup&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#008000"># create a daily backup</span>
+</span></span><span style="display:flex;"><span>/opt/homebrew/bin/borg create <span style="color:#a31515">\
+</span></span></span><span style="display:flex;"><span><span style="color:#a31515"></span>    <span style="color:#008000"># work on log level INFO; </span>
+</span></span><span style="display:flex;"><span>    --verbose <span style="color:#a31515">\
+</span></span></span><span style="display:flex;"><span><span style="color:#a31515"></span>   <span style="color:#008000"># output list of items added (A), modified (M)</span>
+</span></span><span style="display:flex;"><span>   <span style="color:#008000"># also output if error happened when accessing a file (E)</span>
+</span></span><span style="display:flex;"><span>   --list --filter=AME <span style="color:#a31515">\
+</span></span></span><span style="display:flex;"><span><span style="color:#a31515"></span>   <span style="color:#008000"># print stats for the created archive at the end; log the return code (rc)</span>
+</span></span><span style="display:flex;"><span>   --stats --show-rc <span style="color:#a31515">\
+</span></span></span><span style="display:flex;"><span><span style="color:#a31515"></span>   <span style="color:#008000"># use lzma compression (low speed, high compression)</span>
+</span></span><span style="display:flex;"><span>   <span style="color:#008000"># use a heuristic to decide per chunk whether to compress or not (auto)</span>
+</span></span><span style="display:flex;"><span>   --compression auto,lzma,6 <span style="color:#a31515">\
+</span></span></span><span style="display:flex;"><span><span style="color:#a31515"></span>   <span style="color:#008000"># repo name is inferred from $BORG_REPO</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a31515">&#39;::{hostname}-daily-{now}&#39;</span> <span style="color:#a31515">\
+</span></span></span><span style="display:flex;"><span><span style="color:#a31515"></span>      <span style="color:#008000"># directories to backup</span>
+</span></span><span style="display:flex;"><span>      /Users/mmxmb/my_important_docs <span style="color:#a31515">\
+</span></span></span><span style="display:flex;"><span><span style="color:#a31515"></span>      /Users/mmxmb/my_photos <span style="color:#a31515">\
+</span></span></span><span style="display:flex;"><span><span style="color:#a31515"></span>      /Users/mmxmb/Desktop
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>backup_exit=$?
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>info <span style="color:#a31515">&#34;Pruning repository&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#008000"># prune the repo</span>
+</span></span><span style="display:flex;"><span>/opt/homebrew/bin/borg prune <span style="color:#a31515">\
+</span></span></span><span style="display:flex;"><span><span style="color:#a31515"></span>    <span style="color:#008000"># output verbose list of archives kept/pruned; display prune stats at the end</span>
+</span></span><span style="display:flex;"><span>    --list --stats <span style="color:#a31515">\
+</span></span></span><span style="display:flex;"><span><span style="color:#a31515"></span>    <span style="color:#008000"># only consider archive names starting with this prefix</span>
+</span></span><span style="display:flex;"><span>    --glob-archives <span style="color:#a31515">&#39;{hostname}-daily-&#39;</span> <span style="color:#a31515">\
+</span></span></span><span style="display:flex;"><span><span style="color:#a31515"></span>    --show-rc <span style="color:#a31515">\
+</span></span></span><span style="display:flex;"><span><span style="color:#a31515"></span>    <span style="color:#008000"># number of archives to keep for each time interval</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#008000"># example visualisation: https://borgbackup.readthedocs.io/en/stable/usage/prune.html</span>
+</span></span><span style="display:flex;"><span>    --keep-daily 7 <span style="color:#a31515">\
+</span></span></span><span style="display:flex;"><span><span style="color:#a31515"></span>    --keep-weekly 5 <span style="color:#a31515">\
+</span></span></span><span style="display:flex;"><span><span style="color:#a31515"></span>    --keep-monthly 6
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>prune_exit=$?
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#008000"># use highest exit code as exit code</span>
+</span></span><span style="display:flex;"><span>global_exit=<span style="color:#00f">$((</span> backup_exit &gt; prune_exit ? backup_exit : prune_exit <span style="color:#00f">))</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#00f">if</span> [ <span style="color:#a31515">${</span>global_exit<span style="color:#a31515">}</span> -eq 1 ];
+</span></span><span style="display:flex;"><span><span style="color:#00f">then</span>
+</span></span><span style="display:flex;"><span>    info <span style="color:#a31515">&#34;Backup and/or Prune finished with a warning&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#00f">fi</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#00f">if</span> [ <span style="color:#a31515">${</span>global_exit<span style="color:#a31515">}</span> -gt 1 ];
+</span></span><span style="display:flex;"><span><span style="color:#00f">then</span>
+</span></span><span style="display:flex;"><span>    info <span style="color:#a31515">&#34;Backup and/or Prune finished with an error&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#00f">fi</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>exit <span style="color:#a31515">${</span>global_exit<span style="color:#a31515">}</span>
+</span></span></code></pre></div><p>Note that I am using 1Password as my secrets manager. In particular, I store a backup server ssh key and an encryption passphrase in a dedicated vault. I use <a href="https://developer.1password.com/docs/ssh/agent/">1Password SSH agent</a> to access the ssh private key (configured in my ssh config) and <a href="https://developer.1password.com/docs/cli/">1Password CLI</a> to access the passphrase. Set <code>BORG_RSH</code> if you need to customize how Borg uses ssh (e.g. to specify path to private key file).</p>
+<p>One minor issue with running Borg in a shell script is that 1Password tells me that <code>bash</code> is trying to access my vault which is very broad:</p>
+<p><img src="/borgbackup-on-macos/bash_use_sshkey.png" alt="Allow bash to use SSH key 1Password access request"></p>
+<p><img src="/borgbackup-on-macos/bash_get_cli_access.png" alt="Allow bash to get CLI access 1Password access request"></p>
+<p>I prefer to wrap the shell script in a Go executable for audit purposes:</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#00f">package</span> main
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#00f">import</span> (
+</span></span><span style="display:flex;"><span>    <span style="color:#a31515">&#34;log&#34;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a31515">&#34;os&#34;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a31515">&#34;os/exec&#34;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a31515">&#34;path/filepath&#34;</span>
+</span></span><span style="display:flex;"><span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#00f">func</span> main() {
+</span></span><span style="display:flex;"><span>    ex, err := os.Executable()
+</span></span><span style="display:flex;"><span>    <span style="color:#00f">if</span> err != <span style="color:#00f">nil</span> {
+</span></span><span style="display:flex;"><span>        log.Fatal(err)
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    dir := filepath.Dir(ex)
+</span></span><span style="display:flex;"><span>    script := filepath.Join(dir, <span style="color:#a31515">&#34;backup.sh&#34;</span>)
+</span></span><span style="display:flex;"><span>    cmd := exec.Command(<span style="color:#a31515">&#34;/bin/sh&#34;</span>, script)
+</span></span><span style="display:flex;"><span>    cmd.Stdout = os.Stdout
+</span></span><span style="display:flex;"><span>    cmd.Stderr = os.Stderr
+</span></span><span style="display:flex;"><span>    <span style="color:#00f">if</span> err := cmd.Run(); err != <span style="color:#00f">nil</span> {
+</span></span><span style="display:flex;"><span>        log.Fatal(err)
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>Save the compiled binary as <code>remote_backup</code>. Now 1Password shows a better message:</p>
+<p><img src="/borgbackup-on-macos/remote_backup_use_sshkey.png" alt="Allow remote backup to use SSH key 1Password access request"></p>
+<p><img src="/borgbackup-on-macos/remote_backup_get_cli_access.png" alt="Allow remote backup to get CLI access 1Password access request"></p>
+<p>At this point it is a good idea to stop and interact Borg to check that everything works smoothly before moving on to the automation step. In my case, I initialized a test Borg repo, used the above script to create an archive of a directory full of text files (so that I don&rsquo;t have to wait much for compression and encryption), tested extract and prune commands, and finally deleted the repo.</p>
 <h1 id="remote-backup-automation">Remote backup automation</h1>
-<p>Both aforementioned tutorials assume that either <code>cron</code> or <code>systemd</code> is used for scheduling the backup process. Since <code>cron</code> has been deprecated by Apple <a href="https://web.archive.org/web/20060314034955/http://developer.apple.com/macosx/launchd.html">back in 2005</a>, we need to use <code>launchd</code> which is kind of like <code>systemd</code> but for macOS.</p>
-<p>Daemon job definition for <code>launchd</code> is specified in a special XML file called a property list. Here is a sample Borg backup propery list:</p>
-<div class="highlight"><pre style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-xml" data-lang="xml"><span style="color:#00f">&lt;?xml version=&#34;1.0&#34; encoding=&#34;UTF-8&#34;?&gt;</span>
-<span style="color:#00f">&lt;!DOCTYPE plist PUBLIC &#34;-//Apple Computer//DTD PLIST 1.0//EN&#34; &#34;http://www.apple.com/DTDs/PropertyList-1.0.dtd&#34;&gt;</span>
-&lt;plist version=<span style="color:#a31515">&#34;1.0&#34;</span>&gt;
-&lt;dict&gt;
-        &lt;key&gt;Label&lt;/key&gt;
-        &lt;string&gt;mmxmb.borgbackup&lt;/string&gt;
-        &lt;key&gt;Program&lt;/key&gt;
-        &lt;string&gt;/path/to/remote/backup/script/backup.sh&lt;/string&gt;
-        &lt;key&gt;StandardErrorPath&lt;/key&gt;
-        &lt;string&gt;/path/to/remote/backup/log/backup.log&lt;/string&gt;
-        &lt;key&gt;StandardOutPath&lt;/key&gt;
-        &lt;string&gt;/path/to/remote/backup/log/backup.log&lt;/string&gt;
-        &lt;key&gt;UserName&lt;/key&gt;
-        &lt;string&gt;mmxmb&lt;/string&gt;
-        &lt;key&gt;RunAtLoad&lt;/key&gt;
-        &lt;true/&gt;
-        &lt;key&gt;StartCalendarInterval&lt;/key&gt;
-        &lt;dict&gt;
-                &lt;key&gt;Hour&lt;/key&gt;
-                &lt;integer&gt;12&lt;/integer&gt;
-                &lt;key&gt;Minute&lt;/key&gt;
-                &lt;integer&gt;0&lt;/integer&gt;
-        &lt;/dict&gt;
-&lt;/dict&gt;
-&lt;/plist&gt;
-</code></pre></div><p>This file is then saved as <code>/Library/LaunchDaemons/mmxmb.borgbackup.plist</code> (any <code>job.label.plist</code> filename would work).</p>
+<p>Hetzner tutorial assume that <code>cron</code> is used for scheduling the backup process; some other articles that you may find online use <code>systemd</code>. Since <code>cron</code> has been deprecated by Apple <a href="https://web.archive.org/web/20060314034955/http://developer.apple.com/macosx/launchd.html">back in 2005</a>, we need to use <code>launchd</code> which is kind of like <code>systemd</code> but for macOS.</p>
+<p>Since I want to automate backups for my laptop, i.e. a machine that is not always online and that is used only by me when logged in as <code>mmxmb</code>, it makes sense to define a user agent job. A user agent job is a job that runs on behalf of a currently logged in user. Job definition for <code>launchd</code> is specified in a special XML file called a property list. Here is a remote Borg backup propery list that I use:</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-xml" data-lang="xml"><span style="display:flex;"><span><span style="color:#00f">&lt;?xml version=&#34;1.0&#34; encoding=&#34;UTF-8&#34;?&gt;</span>
+</span></span><span style="display:flex;"><span><span style="color:#00f">&lt;!DOCTYPE plist PUBLIC &#34;-//Apple Computer//DTD PLIST 1.0//EN&#34; &#34;http://www.apple.com/DTDs/PropertyList-1.0.dtd&#34;&gt;</span>
+</span></span><span style="display:flex;"><span>&lt;plist version=<span style="color:#a31515">&#34;1.0&#34;</span>&gt;
+</span></span><span style="display:flex;"><span>&lt;dict&gt;
+</span></span><span style="display:flex;"><span>	&lt;key&gt;Label&lt;/key&gt;
+</span></span><span style="display:flex;"><span>	&lt;string&gt;mmxmb.borgbackup-remote&lt;/string&gt;
+</span></span><span style="display:flex;"><span>	&lt;key&gt;Program&lt;/key&gt;
+</span></span><span style="display:flex;"><span>    &lt;string&gt;/path/to/remote/backup/script/go_wrapper_binary&lt;/string&gt;
+</span></span><span style="display:flex;"><span>	&lt;key&gt;StandardErrorPath&lt;/key&gt;
+</span></span><span style="display:flex;"><span>    &lt;string&gt;/path/to/remote/backup/log/backup.log<span style="">&lt;</span>&lt;/string&gt;
+</span></span><span style="display:flex;"><span>	&lt;key&gt;StandardOutPath&lt;/key&gt;
+</span></span><span style="display:flex;"><span>    &lt;string&gt;/path/to/remote/backup/log/backup.log&lt;/string&gt;
+</span></span><span style="display:flex;"><span>    &lt;key&gt;RunAtLoad&lt;/key&gt;
+</span></span><span style="display:flex;"><span>    &lt;true/&gt;
+</span></span><span style="display:flex;"><span>	&lt;key&gt;StartCalendarInterval&lt;/key&gt;
+</span></span><span style="display:flex;"><span>	&lt;dict&gt;
+</span></span><span style="display:flex;"><span>		&lt;key&gt;Hour&lt;/key&gt;
+</span></span><span style="display:flex;"><span>		&lt;integer&gt;12&lt;/integer&gt;
+</span></span><span style="display:flex;"><span>		&lt;key&gt;Minute&lt;/key&gt;
+</span></span><span style="display:flex;"><span>		&lt;integer&gt;0&lt;/integer&gt;
+</span></span><span style="display:flex;"><span>	&lt;/dict&gt;
+</span></span><span style="display:flex;"><span>&lt;/dict&gt;
+</span></span><span style="display:flex;"><span>&lt;/plist&gt;
+</span></span></code></pre></div><p>This file is then saved as <code>~/Library/LaunchAgents/mmxmb.borgbackup-remote.plist</code> (any <code>job.label.plist</code> filename would work). In general, all user agent jobs should be stored in <code>~/Library/LaunchAgents</code>.</p>
 <p>Here&rsquo;s an overview of relevant job properties:</p>
 <ul>
 <li><code>Label</code> is a unique identifier for of a job for the <code>launchd</code> instance.</li>
 <li><code>Program</code> is the path to the executable. In this case it&rsquo;s the backup script.</li>
-<li><code>StandardOutPath</code> and <code>StandardErrorPath</code> are for redirecting output generated by the script. These are very important for observability.</li>
-<li><code>UserName</code> specifies as which user the job should run. It&rsquo;s important to make sure that this user has access to all files that Borg archives, as well as job log files, and Borg server SSH key.</li>
-<li><code>RunAtLoad</code> this is self-descriptive and purely optional. Daemons are loaded at boot time so the script will run after each boot. This also makes debugging the job slightly easier.</li>
+<li><code>StandardOutPath</code> and <code>StandardErrorPath</code> are for redirecting output generated by the script. These are important for observability and debugging.</li>
+<li><code>RunAtLoad</code> run the job as soon as it is loaded. For an agent this means run at login.</li>
 <li><code>StartCalendarInterval</code> schedules the job to run at a specific time. In this case the job is run every day at 12:00 PM.</li>
 </ul>
-<p>For more information on job properties see <a href="https://www.launchd.info/">launchd website</a>.</p>
+<p>For more information on launchd and job properties see <a href="https://www.launchd.info/">launchd docs</a>.</p>
 <hr>
 <p>The job is loaded using:</p>
-<div class="highlight"><pre style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">sudo launchctl load /Library/LaunchDaemons/mmxmb.borgbackup.plist
-</code></pre></div><p>If <code>RunAtLoad</code> is <code>false</code>, the job can be started after loading using its label:</p>
-<div class="highlight"><pre style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">sudo launchctl start mmxmb.borgbackup
-</code></pre></div><p>To unload the job use:</p>
-<div class="highlight"><pre style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">sudo launchctl unload /Library/LaunchDaemons/mmxmb.borgbackup.plist
-</code></pre></div><p>It&rsquo;s a good idea too keep an eye on <code>/var/log/system.log</code> for possible errors when loading and starting a job.</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>launchctl bootstrap gui/<span style="color:#00f">$(</span>id -u <span style="color:#00f">$(</span>whoami<span style="color:#00f">))</span> ~/Library/LaunchAgents/mmxmb.borgbackup-remote.plist
+</span></span></code></pre></div><p>If the job is loaded successfully, you should see the following notification:</p>
+<p><img src="/borgbackup-on-macos/background_items_added.png" alt="launchd scheduled job success Console message"></p>
+<p>And the following message in Console:</p>
+<p><img src="/borgbackup-on-macos/console_registered.png" alt="launchd scheduled job success Console message"></p>
+<p>To unload the job use:</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>launchctl bootout gui/<span style="color:#00f">$(</span>id -u <span style="color:#00f">$(</span>whoami<span style="color:#00f">))</span> ~/Library/LaunchAgents/mmxmb.borgbackup-remote.plist
+</span></span></code></pre></div><p>For more information on launchctl see <a href="https://ss64.com/osx/launchctl.html">launchctl docs</a>.</p>
+<p>Now the backup job should run every day at noon or right after login. It&rsquo;s good to checks logs once in a while to make sure that jobs run successfully.</p>
 <hr>
-<p>As an aside, one significant advantage of using <code>launchd</code> as opposed to <code>cron</code> on a laptop is that <code>cron</code> jobs do not execute if the system is turned off or asleep. <code>launchd</code> jobs scheduled with <code>StartCalendarInterval</code> run when computer wakes up, if the computer was asleep when the job should have run. However, if the machine is off when the job should have run, the job does not execute until the next designated time occurs. See <a href="https://developer.apple.com/library/archive/documentation/MacOSX/Conceptual/BPSystemStartup/Chapters/ScheduledJobs.html">Apple Developer Documentation Archive: Scheduling Timed Jobs</a>.</p>
-<h2 id="automation-pitfalls">Automation pitfalls</h2>
-<p>I used <code>cron</code> and <code>systemd</code> extensively but never used <code>launchd</code>. Therefore I had quite a few problems when setting up the <code>launchd</code> job.</p>
-<h3 id="log-files-permissions">Log files permissions</h3>
-<p>After loading and attempting to run the job, there is a cryptic error message in <code>/var/log/system.log</code>:</p>
-<div class="highlight"><pre style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">Jun 1 01:23:45 mmxmbs-MacBook-Pro com.apple.xpc.launchd[1] (mmxmb.borgbackup[18763]): Service could not initialize: 19F101: xpcproxy + 14521 [XXX][XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX]: 0xd
-Jun 1 01:23:45 mmxmbs-MacBook-Pro com.apple.xpc.launchd[1] (mmxmb.borgbackup[18763]): Service exited with abnormal code: 78
-</code></pre></div><p>This is caused by the user specified under <code>UserName</code> key not having write perimssions for log files specified in <code>StandardErrorPath</code> and <code>StandardOutPath</code>.</p>
-<h3 id="ssh-key-permissions">SSH key permissions</h3>
-<p>The job starts but exits shortly with an error (logged to backup error log) when creating an archive:</p>
-<div class="highlight"><pre style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">Remote: Host key verification failed.
-Connection closed by remote host. Is borg working on the server?
-terminating with error status, rc 2
-</code></pre></div><p>When debugging this I make sure I am logged in as the user that is specified in the job definition. I then try to SSH to the server the with maximum verbose mode on and SSH public key specified explicitly:</p>
-<div class="highlight"><pre style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">ssh -vvv -i /Users/mmxmb/.ssh/storagebox_key username@username.your-storagebox.de
-</code></pre></div><p>This is what I see:</p>
-<div class="highlight"><pre style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">debug1: Next authentication method: publickey
-debug1: Offering public key: /Users/mmxmb/.ssh/storagebox_key RSA SHA256:... explicit agent
-debug3: send packet: type 50
-debug2: we sent a publickey packet, wait <span style="color:#00f">for</span> reply
-debug3: receive packet: type 60
-debug1: Server accepts key: /Users/mmxmb/.ssh/storagebox_key RSA SHA256:... explicit agent
-debug3: sign_and_send_pubkey: RSA SHA256:...
-debug3: sign_and_send_pubkey: signing using ssh-rsa
-debug3: send packet: type 50
-debug3: receive packet: type 51
-debug1: Authentications that can <span style="color:#00f">continue</span>: publickey,password
-debug2: we did not send a packet, disable method
-debug3: authmethod_lookup password
-debug3: remaining preferred: ,password
-</code></pre></div><p>And this is what I expect:</p>
-<div class="highlight"><pre style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">debug1: Next authentication method: publickey
-debug1: Offering public key: /Users/mmxmb/.ssh/storagebox_key RSA SHA256:... explicit agent
-debug3: send packet: type 50
-debug2: we sent a publickey packet, wait <span style="color:#00f">for</span> reply
-debug3: receive packet: type 60
-debug1: Server accepts key: /Users/mmxmb/.ssh/storagebox_key RSA SHA256:... explicit agent
-debug3: sign_and_send_pubkey: RSA SHA256:...
-debug3: sign_and_send_pubkey: signing using rsa-sha2-512
-debug3: send packet: type 50
-debug3: receive packet: type 52
-debug1: Authentication succeeded (publickey)
-</code></pre></div><p>Line <code>debug2: we did not send a packet, disable method</code> indicates that the client fails to send the public key for some reason.</p>
-<p>In my case the problem is caused by incorrect permissions for SSH keys used to authenticate with Borg server. To resolve the problem I create a new key when logged in as the user specified in the job definition and upload the public key to the sever.</p>
-<h2 id="sip-woes">SIP woes</h2>
-<p>The backup script seems to run well and archive <em>almost</em> everything that is needed. The last message in the backup log:</p>
-<div class="highlight"><pre style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">Tue Jun 1 12:34:56 EDT 2020 Backup and/or Prune finished with a warning
-</code></pre></div><p>Which turns out to be caused by this error during <code>borg create</code>:</p>
-<div class="highlight"><pre style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">/Users/mmxmb/Desktop: scandir: [Errno 1] Operation not permitted: <span style="color:#a31515">&#39;/Users/mmxmb/Desktop&#39;</span>
-E /Users/mmxmb/Desktop
-</code></pre></div><p>This error is due to <a href="https://en.wikipedia.org/wiki/System_Integrity_Protection">System Integrity Protection</a> (SIP). When a third-party binary is ran in foreground and it needs to scan a restricted directory like <code>~/Desktop</code>, a dialog pops up asking you if it&rsquo;s OK to give access to the binary. But when a binary is ran in foreground (e.g. daemon) its access will be denied by default.</p>
-<p>This can be fixed by giving the binary full-disk access (FDA) in <code>System Preferences -&gt; Security &amp; Privacy -&gt; Privacy</code> settings. The problem in our case is that the backup script is not a binary; therefore it is not possible to give it FDA. Giving FDA to <code>/usr/local/bin/borg</code> doesn&rsquo;t work since, from the SIP point of view, the restricted directory gets accessed by the program specified in the <code>launchd</code> job, not <code>borg</code>.</p>
-<p>One somewhat hacky workaround that I found in a relevant <a href="https://apple.stackexchange.com/a/343260">AskDifferent answer</a> is to create a wrapper binary that calls the backup script. Here&rsquo;s the code for such a binary written in Go:</p>
-<div class="highlight"><pre style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#008000">// backup provides a binary to run borgbackup script in MacOS Catalina with Full Disk Access
-</span><span style="color:#008000"></span><span style="color:#00f">package</span> main
-
-<span style="color:#00f">import</span> (
-    <span style="color:#a31515">&#34;log&#34;</span>
-    <span style="color:#a31515">&#34;os&#34;</span>
-    <span style="color:#a31515">&#34;os/exec&#34;</span>
-    <span style="color:#a31515">&#34;path/filepath&#34;</span>
-)
-
-<span style="color:#00f">func</span> main() {
-    ex, err := os.Executable()
-    <span style="color:#00f">if</span> err != <span style="color:#00f">nil</span> {
-        log.Fatal(err)
-    }
-    dir := filepath.Dir(ex)
-    script := filepath.Join(dir, <span style="color:#a31515">&#34;backup.sh&#34;</span>)
-    cmd := exec.Command(<span style="color:#a31515">&#34;/bin/sh&#34;</span>, script)
-    cmd.Stdout = os.Stdout
-    cmd.Stderr = os.Stderr
-    <span style="color:#00f">if</span> err := cmd.Run(); err != <span style="color:#00f">nil</span> {
-        log.Fatal(err)
-    }
-}
-</code></pre></div><p>Compile this file and replace the <code>Program</code> property of the backup job property list with the path to this binary. Finally, give FDA to this binary.</p>
-<p><img src="/borgbackup-on-macos/fda.png" alt="macOS FDA Settings"></p>
-<p>Now the backup job should run as expected and terminate with success status.</p>
+<p>As an aside, one advantage of using <code>launchd</code> over <code>cron</code> on a laptop is that <code>cron</code> jobs do not execute if the system is turned off or asleep. <code>launchd</code> jobs scheduled with <code>StartCalendarInterval</code> run when computer wakes up, if the computer was asleep when the job should have run. However, if the machine is off when the job should have run, the job does not execute until the next designated time occurs. See <a href="https://developer.apple.com/library/archive/documentation/MacOSX/Conceptual/BPSystemStartup/Chapters/ScheduledJobs.html">Apple Developer Documentation Archive: Scheduling Timed Jobs</a>.</p>
 <h1 id="local-backup">Local backup</h1>
+<p><em>Note that this section hasn&rsquo;t been updated since 2020.</em></p>
 <p>At this point why not use Borg for local backups as well?</p>
 <p>The way I use my laptop, an external backup HDD can be attached for a few days, while I use the laptop at my desk, and then detached for some time when I need to take my laptop with me somewhere. The fact that the HDD is not always attached to the laptop (as opposed to an always available backup server) requires the backup script and <code>launchd</code> job definition to be adjusted slightly.</p>
 <p>In particular, having a local backup run once every 24 hours is nice. This condition is easily achievable with <code>StartCalendarInterval</code> <code>launchd</code> property, just like in the remote backup job definition. But if a backup drive hasn&rsquo;t been attached for a few days it would be ideal if the backup job runs as soon as the drive is re-attached, and not on the next <code>StartCalendarInterval</code> trigger. In Linux, this can be achieved using a udev rule (see <a href="https://borgbackup.readthedocs.io/en/stable/deployment/automated-local.html">Automated backups to a local hard drive</a> tutorial). Since udev doesn&rsquo;t exist on macOS, here&rsquo;s one way to achieve similar functionality with another <code>launchd</code> property and some Bash.</p>
 <p>Local backup launch daemon job definiton:</p>
-<div class="highlight"><pre style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-xml" data-lang="xml"><span style="color:#00f">&lt;?xml version=&#34;1.0&#34; encoding=&#34;UTF-8&#34;?&gt;</span>
-<span style="color:#00f">&lt;!DOCTYPE plist PUBLIC &#34;-//Apple Computer//DTD PLIST 1.0//EN&#34; &#34;http://www.apple.com/DTDs/PropertyList-1.0.dtd&#34;&gt;</span>
-&lt;plist version=<span style="color:#a31515">&#34;1.0&#34;</span>&gt;
-&lt;dict&gt;
-    &lt;key&gt;Label&lt;/key&gt;
-    &lt;string&gt;mmxmb.borgbackup-local&lt;/string&gt;
-    &lt;key&gt;Program&lt;/key&gt;
-    &lt;string&gt;/path/to/local/backup/script/backup.sh&lt;/string&gt;
-    &lt;key&gt;StandardErrorPath&lt;/key&gt;
-    &lt;string&gt;/path/to/local/backup/log/backup.log&lt;/string&gt;
-    &lt;key&gt;StandardOutPath&lt;/key&gt;
-    &lt;string&gt;/path/to/local/backup/log/backup.log&lt;/string&gt;
-    &lt;key&gt;UserName&lt;/key&gt;
-    &lt;string&gt;mmxmb&lt;/string&gt;
-    &lt;key&gt;StartCalendarInterval&lt;/key&gt;
-    &lt;dict&gt;
-        &lt;key&gt;Hour&lt;/key&gt;
-        &lt;integer&gt;11&lt;/integer&gt;
-        &lt;key&gt;Minute&lt;/key&gt;
-        &lt;integer&gt;0&lt;/integer&gt;
-    &lt;/dict&gt;
-    &lt;key&gt;WatchPaths&lt;/key&gt;
-    &lt;array&gt;
-        &lt;string&gt;/Volumes/backup-disk&lt;/string&gt;
-    &lt;/array&gt;
-&lt;/dict&gt;
-&lt;/plist&gt;
-</code></pre></div><p>The new property, that is not used in remote backup job definition, is <code>WatchPaths</code>. Here&rsquo;s how <code>WatchPaths</code> works when pointed at a directory:</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-xml" data-lang="xml"><span style="display:flex;"><span><span style="color:#00f">&lt;?xml version=&#34;1.0&#34; encoding=&#34;UTF-8&#34;?&gt;</span>
+</span></span><span style="display:flex;"><span><span style="color:#00f">&lt;!DOCTYPE plist PUBLIC &#34;-//Apple Computer//DTD PLIST 1.0//EN&#34; &#34;http://www.apple.com/DTDs/PropertyList-1.0.dtd&#34;&gt;</span>
+</span></span><span style="display:flex;"><span>&lt;plist version=<span style="color:#a31515">&#34;1.0&#34;</span>&gt;
+</span></span><span style="display:flex;"><span>&lt;dict&gt;
+</span></span><span style="display:flex;"><span>    &lt;key&gt;Label&lt;/key&gt;
+</span></span><span style="display:flex;"><span>    &lt;string&gt;mmxmb.borgbackup-local&lt;/string&gt;
+</span></span><span style="display:flex;"><span>    &lt;key&gt;Program&lt;/key&gt;
+</span></span><span style="display:flex;"><span>    &lt;string&gt;/path/to/local/backup/script/backup.sh&lt;/string&gt;
+</span></span><span style="display:flex;"><span>    &lt;key&gt;StandardErrorPath&lt;/key&gt;
+</span></span><span style="display:flex;"><span>    &lt;string&gt;/path/to/local/backup/log/backup.log&lt;/string&gt;
+</span></span><span style="display:flex;"><span>    &lt;key&gt;StandardOutPath&lt;/key&gt;
+</span></span><span style="display:flex;"><span>    &lt;string&gt;/path/to/local/backup/log/backup.log&lt;/string&gt;
+</span></span><span style="display:flex;"><span>    &lt;key&gt;UserName&lt;/key&gt;
+</span></span><span style="display:flex;"><span>    &lt;string&gt;mmxmb&lt;/string&gt;
+</span></span><span style="display:flex;"><span>    &lt;key&gt;StartCalendarInterval&lt;/key&gt;
+</span></span><span style="display:flex;"><span>    &lt;dict&gt;
+</span></span><span style="display:flex;"><span>        &lt;key&gt;Hour&lt;/key&gt;
+</span></span><span style="display:flex;"><span>        &lt;integer&gt;11&lt;/integer&gt;
+</span></span><span style="display:flex;"><span>        &lt;key&gt;Minute&lt;/key&gt;
+</span></span><span style="display:flex;"><span>        &lt;integer&gt;0&lt;/integer&gt;
+</span></span><span style="display:flex;"><span>    &lt;/dict&gt;
+</span></span><span style="display:flex;"><span>    &lt;key&gt;WatchPaths&lt;/key&gt;
+</span></span><span style="display:flex;"><span>    &lt;array&gt;
+</span></span><span style="display:flex;"><span>        &lt;string&gt;/Volumes/backup-disk&lt;/string&gt;
+</span></span><span style="display:flex;"><span>    &lt;/array&gt;
+</span></span><span style="display:flex;"><span>&lt;/dict&gt;
+</span></span><span style="display:flex;"><span>&lt;/plist&gt;
+</span></span></code></pre></div><p>The new property, that is not used in remote backup job definition, is <code>WatchPaths</code>. Here&rsquo;s how <code>WatchPaths</code> works when pointed at a directory:</p>
 <blockquote>
 <p>If the path points to a directory, creating and removing this directory, as well as creating, removing and writing files in this directory will start the job. Actions performed in subdirectories of this directory will not be detected.</p>
 </blockquote>
 <p>If the backup volume is named <code>backup-disk</code> and it has <code>backup</code> directory which contains Borg repos then then the backup job is triggered when the volume is mounted or unmounted. From the point of view of <code>WatchPaths</code> that is equivalent to <code>/Volumes/backup-disk</code> directory being created or deleted.</p>
 <p>Since the backup needs to start only when the volume is mounted, the backup script needs to handle the case when the job is triggered when the volume is unmounted:</p>
-<div class="highlight"><pre style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash"><span style="color:#00f">#!/bin/sh
-</span><span style="color:#00f"></span>
-<span style="color:#008000"># it seems that sometimes launchd job is triggered on volume mount</span>
-<span style="color:#008000"># but the disk is not immediately accessible, so sleeping for a bit helps</span>
-sleep 5
-
-DISK_NAME=backup-disk
-MOUNTPOINT=/Volumes/$DISK_NAME
-
-<span style="color:#008000"># some helpers and error handling:</span>
-info() { printf <span style="color:#a31515">&#34;\n%s %s\n\n&#34;</span> <span style="color:#a31515">&#34;</span><span style="color:#00f">$(</span> date <span style="color:#00f">)</span><span style="color:#a31515">&#34;</span> <span style="color:#a31515">&#34;</span>$*<span style="color:#a31515">&#34;</span> &gt;&amp;2; }
-trap <span style="color:#a31515">&#39;echo $( date ) Backup interrupted &gt;&amp;2; exit 2&#39;</span> INT TERM
-
-<span style="color:#008000"># exit if disk is not mounted; launchd job gets triggered both when disk is mounted/unmounted</span>
-<span style="color:#00f">if</span> [ ! -d <span style="color:#a31515">&#34;</span>$MOUNTPOINT<span style="color:#a31515">&#34;</span> ]; <span style="color:#00f">then</span>
-  info <span style="color:#a31515">&#34;The disk </span>$MOUNTPOINT<span style="color:#a31515"> is not mounted. Exiting.&#34;</span>
-  exit 0
-<span style="color:#00f">fi</span>
-
-export BORG_REPO=<span style="color:#a31515">&#34;</span>$MOUNTPOINT<span style="color:#a31515">/backup/mbp2015&#34;</span>
-export BORG_PASSPHRASE=<span style="color:#a31515">&#39;VERY_LONG_PASSPHRASE&#39;</span>
-
-<span style="color:#008000"># get unix time of the last complete backup</span>
-<span style="color:#008000"># source: https://projects.torsion.org/witten/borgmatic/issues/86</span>
-LAST_BACKUP_TIME=<span style="color:#a31515">`</span>/usr/local/bin/borg list --sort timestamp  --format <span style="color:#a31515">&#39;{time:%s}{TAB}{name}{NEWLINE}&#39;</span> | grep -v <span style="color:#a31515">&#39;\.checkpoint$&#39;</span> | tail -1 |  cut -f 1<span style="color:#a31515">`</span>
-
-<span style="color:#008000"># find time difference between now and last complete backup</span>
-NOW_TIME=<span style="color:#a31515">`</span>date +<span style="color:#a31515">&#34;%s&#34;</span><span style="color:#a31515">`</span>
-SECONDS_SINCE_LAST=<span style="color:#00f">$((</span>NOW_TIME - LAST_BACKUP_TIME<span style="color:#00f">))</span>
-SECONDS_IN_DAY=86400
-
-<span style="color:#008000"># exit if last backup took place less than 24 hours ago</span>
-<span style="color:#00f">if</span> [ $SECONDS_SINCE_LAST -lt $SECONDS_IN_DAY ];
-<span style="color:#00f">then</span>
-  info <span style="color:#a31515">&#34;Last backup happened less than 24 hours ago. Exiting.&#34;</span>
-  exit 0
-<span style="color:#00f">fi</span>
-
-info <span style="color:#a31515">&#34;Starting local backup&#34;</span>
-
-<span style="color:#008000"># create a daily backup</span>
-/usr/local/bin/borg create <span style="color:#a31515">\
-</span><span style="color:#a31515"></span>    --verbose <span style="color:#a31515">\
-</span><span style="color:#a31515"></span>   --list --filter=AME <span style="color:#a31515">\
-</span><span style="color:#a31515"></span>   --stats --show-rc <span style="color:#a31515">\
-</span><span style="color:#a31515"></span>   --compression auto,lzma,6 <span style="color:#a31515">\
-</span><span style="color:#a31515"></span>    <span style="color:#a31515">&#39;::{hostname}-daily-{now}&#39;</span> <span style="color:#a31515">\
-</span><span style="color:#a31515"></span>      /Users/mmxmb/my_important_docs <span style="color:#a31515">\
-</span><span style="color:#a31515"></span>      /Users/mmxmb/my_photos <span style="color:#a31515">\
-</span><span style="color:#a31515"></span>      /Users/mmxmb/Desktop
-
-backup_exit=$?
-
-info <span style="color:#a31515">&#34;Pruning local repository&#34;</span>
-
-<span style="color:#008000"># prune the repo</span>
-/usr/local/bin/borg prune <span style="color:#a31515">\
-</span><span style="color:#a31515"></span>    --list --stats <span style="color:#a31515">\
-</span><span style="color:#a31515"></span>    --prefix <span style="color:#a31515">&#39;{hostname}-daily-&#39;</span> <span style="color:#a31515">\
-</span><span style="color:#a31515"></span>    --show-rc <span style="color:#a31515">\
-</span><span style="color:#a31515"></span>    --keep-daily 7 <span style="color:#a31515">\
-</span><span style="color:#a31515"></span>    --keep-weekly 5 <span style="color:#a31515">\
-</span><span style="color:#a31515"></span>    --keep-monthly 6
-
-prune_exit=$?
-
-<span style="color:#008000"># use highest exit code as exit code</span>
-global_exit=<span style="color:#00f">$((</span> backup_exit &gt; prune_exit ? backup_exit : prune_exit <span style="color:#00f">))</span>
-
-<span style="color:#00f">if</span> [ <span style="color:#a31515">${</span>global_exit<span style="color:#a31515">}</span> -eq 1 ];
-<span style="color:#00f">then</span>
-    info <span style="color:#a31515">&#34;Backup and/or Prune finished with a warning&#34;</span>
-<span style="color:#00f">fi</span>
-
-<span style="color:#00f">if</span> [ <span style="color:#a31515">${</span>global_exit<span style="color:#a31515">}</span> -gt 1 ];
-<span style="color:#00f">then</span>
-    info <span style="color:#a31515">&#34;Backup and/or Prune finished with an error&#34;</span>
-<span style="color:#00f">fi</span>
-
-exit <span style="color:#a31515">${</span>global_exit<span style="color:#a31515">}</span>
-</code></pre></div><p>This script also contains some logic preventing the backup job from creating a new archive too often, i.e. when a backup drive is re-attached many times throughout the day.</p>
-<h2 id="sip-woes-again">SIP woes, again</h2>
-<p>If <code>launchd</code> job calls the script directly, there is a problem even before the archive creation starts:</p>
-<div class="highlight"><pre style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">Sat Jun 06 12:34:56 EDT 2020 Starting local backup
-
-Local Exception
-Traceback (most recent call last):
-  File <span style="color:#a31515">&#34;borg/locking.py&#34;</span>, line 130, in acquire
-FileExistsError: [Errno 17] File exists: <span style="color:#a31515">&#39;/Volumes/backup-disk/backup/mbp2015/lock.exclusive&#39;</span>
-
-During handling of the above exception, another exception occurred:
-
-Traceback (most recent call last):
-  File <span style="color:#a31515">&#34;borg/archiver.py&#34;</span>, line 4565, in main
-  File <span style="color:#a31515">&#34;borg/archiver.py&#34;</span>, line 4497, in run
-  File <span style="color:#a31515">&#34;borg/archiver.py&#34;</span>, line 161, in wrapper
-  File <span style="color:#a31515">&#34;borg/repository.py&#34;</span>, line 190, in __enter__
-  File <span style="color:#a31515">&#34;borg/repository.py&#34;</span>, line 421, in open
-  File <span style="color:#a31515">&#34;borg/locking.py&#34;</span>, line 350, in acquire
-  File <span style="color:#a31515">&#34;borg/locking.py&#34;</span>, line 363, in _wait_for_readers_finishing
-  File <span style="color:#a31515">&#34;borg/locking.py&#34;</span>, line 134, in acquire
-  File <span style="color:#a31515">&#34;borg/locking.py&#34;</span>, line 159, in kill_stale_lock
-PermissionError: [Errno 1] Operation not permitted: <span style="color:#a31515">&#39;/Volumes/backup-disk/backup/mbp2015/lock.exclusive&#39;</span>
-
-Platform: Darwin mmxmbs-MacBook-Pro.local 19.5.0 Darwin Kernel Version 19.5.0: Tue May 26 12:34:56 PDT 2020; root:xnu-6153.121.2~2/RELEASE_X86_64 x86_64
-Borg: 1.1.13  Python: CPython 3.5.9 msgpack: 0.5.6
-PID: 50157  CWD: /
-sys.argv: [<span style="color:#a31515">&#39;/usr/local/bin/borg&#39;</span>, <span style="color:#a31515">&#39;create&#39;</span>, <span style="color:#a31515">&#39;--verbose&#39;</span>, <span style="color:#a31515">&#39;--list&#39;</span>, <span style="color:#a31515">&#39;--filter=AME&#39;</span>, <span style="color:#a31515">&#39;--stats&#39;</span>, <span style="color:#a31515">&#39;--show-rc&#39;</span>, <span style="color:#a31515">&#39;--compression&#39;</span>, <span style="color:#a31515">&#39;auto,lzma,6&#39;</span>, <span style="color:#a31515">&#39;::{hostname}-daily-{now}&#39;</span>, <span style="color:#a31515">&#39;/Users/mmxmb/my_important_docs&#39;</span>, <span style="color:#a31515">&#39;/Users/mmxmb/photos&#39;</span>, <span style="color:#a31515">&#39;/Users/mmxmb/Desktop&#39;</span>]
-SSH_ORIGINAL_COMMAND: None
-
-terminating with error status, rc 2
-</code></pre></div><p>SIP restricts access to removable volumes so the trick with creating a wrapper binary and giving it FDA has to be applied here.</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#00f">#!/bin/sh
+</span></span></span><span style="display:flex;"><span><span style="color:#00f"></span>
+</span></span><span style="display:flex;"><span><span style="color:#008000"># it seems that sometimes launchd job is triggered on volume mount</span>
+</span></span><span style="display:flex;"><span><span style="color:#008000"># but the disk is not immediately accessible, so sleeping for a bit helps</span>
+</span></span><span style="display:flex;"><span>sleep 5
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>DISK_NAME=backup-disk
+</span></span><span style="display:flex;"><span>MOUNTPOINT=/Volumes/$DISK_NAME
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#008000"># some helpers and error handling:</span>
+</span></span><span style="display:flex;"><span>info() { printf <span style="color:#a31515">&#34;\n%s %s\n\n&#34;</span> <span style="color:#a31515">&#34;</span><span style="color:#00f">$(</span> date <span style="color:#00f">)</span><span style="color:#a31515">&#34;</span> <span style="color:#a31515">&#34;</span>$*<span style="color:#a31515">&#34;</span> &gt;&amp;2; }
+</span></span><span style="display:flex;"><span>trap <span style="color:#a31515">&#39;echo $( date ) Backup interrupted &gt;&amp;2; exit 2&#39;</span> INT TERM
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#008000"># exit if disk is not mounted; launchd job gets triggered both when disk is mounted/unmounted</span>
+</span></span><span style="display:flex;"><span><span style="color:#00f">if</span> [ ! -d <span style="color:#a31515">&#34;</span>$MOUNTPOINT<span style="color:#a31515">&#34;</span> ]; <span style="color:#00f">then</span>
+</span></span><span style="display:flex;"><span>  info <span style="color:#a31515">&#34;The disk </span>$MOUNTPOINT<span style="color:#a31515"> is not mounted. Exiting.&#34;</span>
+</span></span><span style="display:flex;"><span>  exit 0
+</span></span><span style="display:flex;"><span><span style="color:#00f">fi</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>export BORG_REPO=<span style="color:#a31515">&#34;</span>$MOUNTPOINT<span style="color:#a31515">/backup/mbp2015&#34;</span>
+</span></span><span style="display:flex;"><span>export BORG_PASSPHRASE=<span style="color:#a31515">&#39;VERY_LONG_PASSPHRASE&#39;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#008000"># get unix time of the last complete backup</span>
+</span></span><span style="display:flex;"><span><span style="color:#008000"># source: https://projects.torsion.org/witten/borgmatic/issues/86</span>
+</span></span><span style="display:flex;"><span>LAST_BACKUP_TIME=<span style="color:#a31515">`</span>/usr/local/bin/borg list --sort timestamp  --format <span style="color:#a31515">&#39;{time:%s}{TAB}{name}{NEWLINE}&#39;</span> | grep -v <span style="color:#a31515">&#39;\.checkpoint$&#39;</span> | tail -1 |  cut -f 1<span style="color:#a31515">`</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#008000"># find time difference between now and last complete backup</span>
+</span></span><span style="display:flex;"><span>NOW_TIME=<span style="color:#a31515">`</span>date +<span style="color:#a31515">&#34;%s&#34;</span><span style="color:#a31515">`</span>
+</span></span><span style="display:flex;"><span>SECONDS_SINCE_LAST=<span style="color:#00f">$((</span>NOW_TIME - LAST_BACKUP_TIME<span style="color:#00f">))</span>
+</span></span><span style="display:flex;"><span>SECONDS_IN_DAY=86400
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#008000"># exit if last backup took place less than 24 hours ago</span>
+</span></span><span style="display:flex;"><span><span style="color:#00f">if</span> [ $SECONDS_SINCE_LAST -lt $SECONDS_IN_DAY ];
+</span></span><span style="display:flex;"><span><span style="color:#00f">then</span>
+</span></span><span style="display:flex;"><span>  info <span style="color:#a31515">&#34;Last backup happened less than 24 hours ago. Exiting.&#34;</span>
+</span></span><span style="display:flex;"><span>  exit 0
+</span></span><span style="display:flex;"><span><span style="color:#00f">fi</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>info <span style="color:#a31515">&#34;Starting local backup&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#008000"># create a daily backup</span>
+</span></span><span style="display:flex;"><span>/usr/local/bin/borg create <span style="color:#a31515">\
+</span></span></span><span style="display:flex;"><span><span style="color:#a31515"></span>    --verbose <span style="color:#a31515">\
+</span></span></span><span style="display:flex;"><span><span style="color:#a31515"></span>   --list --filter=AME <span style="color:#a31515">\
+</span></span></span><span style="display:flex;"><span><span style="color:#a31515"></span>   --stats --show-rc <span style="color:#a31515">\
+</span></span></span><span style="display:flex;"><span><span style="color:#a31515"></span>   --compression auto,lzma,6 <span style="color:#a31515">\
+</span></span></span><span style="display:flex;"><span><span style="color:#a31515"></span>    <span style="color:#a31515">&#39;::{hostname}-daily-{now}&#39;</span> <span style="color:#a31515">\
+</span></span></span><span style="display:flex;"><span><span style="color:#a31515"></span>      /Users/mmxmb/my_important_docs <span style="color:#a31515">\
+</span></span></span><span style="display:flex;"><span><span style="color:#a31515"></span>      /Users/mmxmb/my_photos <span style="color:#a31515">\
+</span></span></span><span style="display:flex;"><span><span style="color:#a31515"></span>      /Users/mmxmb/Desktop
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>backup_exit=$?
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>info <span style="color:#a31515">&#34;Pruning local repository&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#008000"># prune the repo</span>
+</span></span><span style="display:flex;"><span>/usr/local/bin/borg prune <span style="color:#a31515">\
+</span></span></span><span style="display:flex;"><span><span style="color:#a31515"></span>    --list --stats <span style="color:#a31515">\
+</span></span></span><span style="display:flex;"><span><span style="color:#a31515"></span>    --prefix <span style="color:#a31515">&#39;{hostname}-daily-&#39;</span> <span style="color:#a31515">\
+</span></span></span><span style="display:flex;"><span><span style="color:#a31515"></span>    --show-rc <span style="color:#a31515">\
+</span></span></span><span style="display:flex;"><span><span style="color:#a31515"></span>    --keep-daily 7 <span style="color:#a31515">\
+</span></span></span><span style="display:flex;"><span><span style="color:#a31515"></span>    --keep-weekly 5 <span style="color:#a31515">\
+</span></span></span><span style="display:flex;"><span><span style="color:#a31515"></span>    --keep-monthly 6
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>prune_exit=$?
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#008000"># use highest exit code as exit code</span>
+</span></span><span style="display:flex;"><span>global_exit=<span style="color:#00f">$((</span> backup_exit &gt; prune_exit ? backup_exit : prune_exit <span style="color:#00f">))</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#00f">if</span> [ <span style="color:#a31515">${</span>global_exit<span style="color:#a31515">}</span> -eq 1 ];
+</span></span><span style="display:flex;"><span><span style="color:#00f">then</span>
+</span></span><span style="display:flex;"><span>    info <span style="color:#a31515">&#34;Backup and/or Prune finished with a warning&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#00f">fi</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#00f">if</span> [ <span style="color:#a31515">${</span>global_exit<span style="color:#a31515">}</span> -gt 1 ];
+</span></span><span style="display:flex;"><span><span style="color:#00f">then</span>
+</span></span><span style="display:flex;"><span>    info <span style="color:#a31515">&#34;Backup and/or Prune finished with an error&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#00f">fi</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>exit <span style="color:#a31515">${</span>global_exit<span style="color:#a31515">}</span>
+</span></span></code></pre></div><p>This script also contains some logic preventing the backup job from creating a new archive too often, i.e. when a backup drive is re-attached many times throughout the day.</p>
 
 </main>
 
